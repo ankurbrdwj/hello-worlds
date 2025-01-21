@@ -1,7 +1,8 @@
-package com.ankur.candlesticks.factory;
+package com.ankur.candlesticks.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.ankur.candlesticks.dto.Candlestick;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 
