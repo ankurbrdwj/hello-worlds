@@ -1,6 +1,7 @@
 package com.ankur.webcrawler.config;
 
 import com.ankur.webcrawler.service.CrawlReporterInterface;
+import com.ankur.webcrawler.service.Crawler;
 import com.ankur.webcrawler.service.ParseStrategy;
 import com.ankur.webcrawler.service.impl.WebCrawler;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +30,7 @@ public class CrawlerConfig {
     }
 
     @Bean
-    public WebCrawler webCrawler() {
+    public Crawler webCrawler() {
         String selected = env.getProperty("crawler.parse-strategy", "jsoup");
         ParseStrategy strategy = strategies.get(selected);
 

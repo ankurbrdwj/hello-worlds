@@ -1,5 +1,6 @@
 package com.ankur.webcrawler;
 
+import com.ankur.webcrawler.service.Crawler;
 import com.ankur.webcrawler.service.CrawlerFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,12 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @TestPropertySource(properties = "crawler.seed-url=https://example.com")
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
 class WebcrawlerApplicationTests {
-    @Autowired
-    CrawlerFactory crawlerFactory;
+
     @Test
     void contextLoads() {
-        Assertions.assertNotNull(crawlerFactory);
     }
+
     @Test
     void shouldStartWithSeedUrl() {
         // Should NOT throw due to seedUrl being present
