@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Partner Service</title>
+</head>
+<body>
+<h2>PartnerService Websocket Preview</h2>
+
+<button value="Connect" onclick="go();">Connect</button>
+<button value="Diconnect" onclick="stop();">Disconnect</button>
+<div id="" style="display: flex;">
+
+  <div id="outputInstruments" style="display: flex; flex-direction: column; margin-right: 2rem; border: solid 1px #F9F8F7">
+    <h4>Instruments</h4>
+  </div>
+  <div id="outputQuotes" style="display: flex; flex-direction: column; border: solid 1px #F9F8F7">
+    <h4>Quotes</h4>
+  </div>
+</div>
+
+
+
+<script language="javascript" type="text/javascript">
+
+  let outputQuotes;
+  let outputInstruments;
+  let quotesWs
+  let instrumentsWs
+
+  function go()
+  {
+    const host = "ws://"+location.host;
+    outputQuotes = document.getElementById("outputQuotes");
+    outputInstruments = document.getElementById("outputInstruments");
+    quotesWs = testWebSocket(host+"/quotes",outputQuotes);
+    instrumentsWs = testWebSocket(host+"/instruments",outputInstruments);
+  }
+
+  function stop(){
+    quotesWs.close()
+    instrumentsWs.close()
+  }
+
+  function testWebSocket(param,output)
+  {
+    const websocket = new WebSocket(param);
+    websocket.onopen = function(evt) { onOpen(evt,output) };
+    websocket.onclose = function(evt) { onClose(evt,output) };
+    websocket.onmessage = function(evt) { onMessage(evt,output) };
+    websocket.onerror = function(evt) { onError(evt,output) };
+    return websocket
+  }
+
+  function onOpen(evt,output)
+  {
+    writeToScreen("CONNECTED",output);
+  }
+
+  function onClose(evt,output)
+  {
+    writeToScreen("DISCONNECTED",output);
+  }
+
+  function onMessage(evt,output)
+  {
+    writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>',output);
+  }
+
+  function onError(evt,output)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data,output);
+  }
+
+
+  function writeToScreen(message,output)
+  {
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.insertBefore(pre,output.children[1]);
+    if(output.children.length>500){
+      output.removeChild(output.children[output.children.length-1])
+    }
+  }
+
+
+  </script>
+
+</body>
+</html>

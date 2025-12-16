@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: price-alert-postgres
+    environment:
+      POSTGRES_DB: price_alerts
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    restart: always
+
+  conduktor-console:
+    image: conduktor/conduktor-console:latest
+    container_name: price-alert-conduktor
+    depends_on:
+      - postgres
+    ports:
+      - "9080:8080"
+    environment:
+      CDK_DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/conduktor
+      CDK_ADMIN_EMAIL: admin@admin.io
+      CDK_ADMIN_PASSWORD: Admin123!
+      CDK_CLUSTERS_0_ID: local
+      CDK_CLUSTERS_0_NAME: Local Kafka
+      CDK_CLUSTERS_0_BOOTSTRAPSERVERS: host.docker.internal:9092
+      CDK_CLUSTERS_0_SECURITY_PROTOCOL: PLAINTEXT
+    restart: always

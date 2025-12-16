@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "price-alert-simulator",
+		"name": "Price Alert Simulator",
+		"description": "API collection for Price Alert System - Stock Price Feed Simulator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Simulator",
+			"item": [
+				{
+					"name": "Get Current Prices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/prices",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "prices"]
+						},
+						"description": "Get current simulated prices for all stocks (TCS, INFY, RELIANCE, HDFC, ICICIBANK)"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Single Price Update (Tick)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/tick",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "tick"]
+						},
+						"description": "Send a single price update for a random stock. Use this with load testing tools like 'hey'."
+					},
+					"response": []
+				},
+				{
+					"name": "Burst - Send Multiple Messages",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/burst?count=1000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "burst"],
+							"query": [
+								{
+									"key": "count",
+									"value": "1000",
+									"description": "Number of messages to send (default: 1000)"
+								}
+							]
+						},
+						"description": "Send N messages as fast as possible. Returns throughput stats."
+					},
+					"response": []
+				},
+				{
+					"name": "Load Test - Sustained Rate",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/loadtest?rate=100&duration=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "loadtest"],
+							"query": [
+								{
+									"key": "rate",
+									"value": "100",
+									"description": "Messages per second (default: 100)"
+								},
+								{
+									"key": "duration",
+									"value": "10",
+									"description": "Duration in seconds (default: 10)"
+								}
+							]
+						},
+						"description": "Run load test at specified rate (msg/sec) for duration (seconds)."
+					},
+					"response": []
+				},
+				{
+					"name": "Start Continuous Feed",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/start",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "start"]
+						},
+						"description": "Start continuous price feed (1 message per second)"
+					},
+					"response": []
+				},
+				{
+					"name": "Stop Continuous Feed",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/simulator/stop",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "simulator", "stop"]
+						},
+						"description": "Stop continuous price feed"
+					},
+					"response": []
+				}
+			],
+			"description": "Stock price feed simulator endpoints for testing and load generation"
+		}
+	]
+}
