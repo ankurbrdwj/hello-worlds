@@ -13,108 +13,117 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Servlet Filter that logs every request passing through the Gateway.
- *
- * FILTER EXECUTION ORDER IN GATEWAY:
- *
- * 1. [RequestLoggingFilter] - This filter (Servlet level)
- * 2. [DispatcherServlet] - Spring MVC dispatcher
- * 3. [RouterFunction] - Gateway route matching
- * 4. [Before Filters] - Route-specific before filters
- * 5. [HTTP Forward] - Actual call to downstream service
- * 6. [After Filters] - Route-specific after filters
- * 7. [Response] - Back through filter chain
- */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
+    // Request counters per service
+    private final Map<String, AtomicLong> requestCounters = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> successCounters = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> rateLimitedCounters = new ConcurrentHashMap<>();
+
+    // Total counters
+    private final AtomicLong totalRequests = new AtomicLong(0);
+    private final AtomicLong totalRateLimited = new AtomicLong(0);
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Generate unique request ID for tracing
         String requestId = UUID.randomUUID().toString().substring(0, 8);
         MDC.put("requestId", requestId);
 
         long startTime = System.currentTimeMillis();
+        String service = extractService(request.getRequestURI());
 
-        // Log request entry
-        logRequestEntry(request, requestId);
+        // Increment request counter
+        incrementCounter(requestCounters, service);
+        long reqCount = totalRequests.incrementAndGet();
+
+        logRequestEntry(request, service, reqCount);
 
         try {
-            // Continue filter chain - this is where routing happens
             filterChain.doFilter(request, response);
         } finally {
             long duration = System.currentTimeMillis() - startTime;
-
-            // Log request completion
-            logRequestCompletion(request, response, requestId, duration);
-
+            logRequestCompletion(request, response, service, duration);
             MDC.remove("requestId");
         }
     }
 
-    private void logRequestEntry(HttpServletRequest request, String requestId) {
-        log.info("");
-        log.info("┌─────────────────────────────────────────────────────────────────┐");
-        log.info("│ >>> REQUEST ENTERING GATEWAY                                    │");
-        log.info("├─────────────────────────────────────────────────────────────────┤");
-        log.info("│ Request ID   : {}                                         │", requestId);
-        log.info("│ Timestamp    : {}                              │", java.time.Instant.now());
-        log.info("├─────────────────────────────────────────────────────────────────┤");
-        log.info("│ Method       : {}", padRight(request.getMethod(), 51) + "│");
-        log.info("│ URI          : {}", padRight(request.getRequestURI(), 51) + "│");
-        log.info("│ Query String : {}", padRight(request.getQueryString(), 51) + "│");
-        log.info("│ Remote Addr  : {}", padRight(request.getRemoteAddr(), 51) + "│");
-        log.info("│ Content-Type : {}", padRight(request.getContentType(), 51) + "│");
-        log.info("├─────────────────────────────────────────────────────────────────┤");
-        log.info("│ GATEWAY ROUTING FLOW:                                           │");
-        log.info("│   Step 1: Request received at Gateway port                      │");
-        log.info("│   Step 2: Matching predicates against routes...                 │");
-        log.info("└─────────────────────────────────────────────────────────────────┘");
-
-        // Log headers at DEBUG level
-        if (log.isDebugEnabled()) {
-            log.debug("Request Headers for [{}]:", requestId);
-            Collections.list(request.getHeaderNames()).forEach(headerName ->
-                    log.debug("  {} = {}", headerName, request.getHeader(headerName))
-            );
-        }
+    private void logRequestEntry(HttpServletRequest request, String service, long totalCount) {
+        log.info(">>> [{}] {} {} | Total: {} | Service requests: {}",
+                service,
+                request.getMethod(),
+                request.getRequestURI(),
+                totalCount,
+                getCount(requestCounters, service));
     }
 
     private void logRequestCompletion(HttpServletRequest request,
                                       HttpServletResponse response,
-                                      String requestId,
+                                      String service,
                                       long duration) {
-        String statusEmoji = response.getStatus() < 400 ? "OK" : "ERR";
+        int status = response.getStatus();
 
-        log.info("");
-        log.info("┌─────────────────────────────────────────────────────────────────┐");
-        log.info("│ <<< RESPONSE LEAVING GATEWAY                                    │");
-        log.info("├─────────────────────────────────────────────────────────────────┤");
-        log.info("│ Request ID   : {}                                         │", requestId);
-        log.info("│ Status       : {} [{}]", padRight(String.valueOf(response.getStatus()), 45) + statusEmoji, "│");
-        log.info("│ Duration     : {} ms", padRight(String.valueOf(duration), 48) + "│");
-        log.info("│ Path         : {}", padRight(request.getRequestURI(), 51) + "│");
-        log.info("├─────────────────────────────────────────────────────────────────┤");
-        log.info("│ ROUTING COMPLETED:                                              │");
-        log.info("│   Step 5: Response received from downstream                     │");
-        log.info("│   Step 6: Returning response to client                          │");
-        log.info("└─────────────────────────────────────────────────────────────────┘");
-        log.info("");
+        if (status == 429) {
+            // Rate limited
+            incrementCounter(rateLimitedCounters, service);
+            long rateLimited = totalRateLimited.incrementAndGet();
+
+            log.warn("<<< [{}] {} {} | Status: {} RATE_LIMITED | Duration: {}ms | Rate limited: {}/{}",
+                    service,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    status,
+                    duration,
+                    rateLimited,
+                    totalRequests.get());
+        } else if (status < 400) {
+            // Success
+            incrementCounter(successCounters, service);
+
+            log.info("<<< [{}] {} {} | Status: {} OK | Duration: {}ms | Success rate: {}/{}",
+                    service,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    status,
+                    duration,
+                    getCount(successCounters, service),
+                    getCount(requestCounters, service));
+        } else {
+            // Error
+            log.error("<<< [{}] {} {} | Status: {} ERROR | Duration: {}ms",
+                    service,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    status,
+                    duration);
+        }
     }
 
-    private String padRight(String s, int length) {
-        if (s == null) s = "null";
-        if (s.length() >= length) return s.substring(0, length);
-        return s + " ".repeat(length - s.length());
+    private String extractService(String uri) {
+        if (uri == null) return "unknown";
+        if (uri.startsWith("/api/users")) return "user-service";
+        if (uri.startsWith("/api/orders")) return "order-service";
+        if (uri.startsWith("/api/ratelimit")) return "rate-limiter";
+        return "gateway";
+    }
+
+    private void incrementCounter(Map<String, AtomicLong> counters, String service) {
+        counters.computeIfAbsent(service, k -> new AtomicLong(0)).incrementAndGet();
+    }
+
+    private long getCount(Map<String, AtomicLong> counters, String service) {
+        AtomicLong counter = counters.get(service);
+        return counter != null ? counter.get() : 0;
     }
 }
