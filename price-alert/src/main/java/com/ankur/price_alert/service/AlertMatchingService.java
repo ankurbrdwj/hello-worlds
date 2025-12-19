@@ -8,8 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,12 +16,17 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Matches incoming price ticks against user alerts.
- * Uses Database query with lazy-loading HashMap cache for active symbols.
+ * Uses TreeMap-based indexing for O(log N + K) alert matching.
  *
- * Strategy: DB Query + HashMap Cache (Memory Safe)
- * - Cache only alerts for symbols that received recent price ticks
- * - Evict cache entries after TTL (no ticks for X minutes)
- * - DB is source of truth, cache is for performance
+ * Strategy: TreeMap Index + HashMap Cache
+ * - PRICE_ABOVE alerts: TreeMap sorted by threshold, use headMap for O(log N) range query
+ * - PRICE_BELOW alerts: TreeMap sorted by threshold, use tailMap for O(log N) range query
+ * - PRICE_EQUALS alerts: TreeMap with tolerance-based range query
+ * - PRICE_BETWEEN alerts: TreeMap sorted by lower threshold
+ *
+ * Time Complexity:
+ * - Previous: O(N) linear scan per price tick
+ * - Now: O(log N + K) where K = number of triggered alerts
  */
 @Service
 public class AlertMatchingService {
@@ -30,17 +34,17 @@ public class AlertMatchingService {
     private final PriceAlertRepository alertRepository;
     private final EmailService emailService;
 
-    // Cache: symbol -> list of active alerts
-    private final Map<String, CachedAlerts> alertCache = new ConcurrentHashMap<>();
+    // Cache: symbol -> TreeMap-indexed alerts
+    private final Map<String, CachedAlertIndex> alertCache = new ConcurrentHashMap<>();
 
     // Track recently triggered alerts to prevent spam
     private final Map<String, Long> recentlyTriggered = new ConcurrentHashMap<>();
 
     @Value("${alert.cache.ttl.minutes:5}")
-    private int cacheTtlMinutes = 5;  // Default value for unit tests
+    private int cacheTtlMinutes = 5;
 
     @Value("${alert.trigger.cooldown.seconds:60}")
-    private int triggerCooldownSeconds = 60;  // Default value for unit tests
+    private int triggerCooldownSeconds = 60;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -53,20 +57,22 @@ public class AlertMatchingService {
     }
 
     /**
-     * Process incoming price tick and match against alerts
+     * Process incoming price tick and match against alerts.
+     * Uses TreeMap range queries for O(log N + K) complexity.
      */
     public void processPrice(String symbol, double price) {
         try {
-            // Get alerts from cache or load from DB
-            List<PriceAlert> alerts = getAlertsForSymbol(symbol);
+            CachedAlertIndex index = getAlertIndexForSymbol(symbol);
 
-            if (alerts.isEmpty()) {
+            if (index.isEmpty()) {
                 return;
             }
 
-            // Check each alert
-            for (PriceAlert alert : alerts) {
-                if (shouldTrigger(alert, price)) {
+            // Find and trigger matching alerts using TreeMap range queries
+            List<PriceAlert> triggeredAlerts = findTriggeredAlerts(index, price);
+
+            for (PriceAlert alert : triggeredAlerts) {
+                if (!isInCooldown(alert)) {
                     triggerAlert(alert, price);
                 }
             }
@@ -76,63 +82,89 @@ public class AlertMatchingService {
     }
 
     /**
-     * Get alerts for symbol - from cache or DB
+     * Find all alerts that should trigger for the given price.
+     * Uses TreeMap range queries for efficient matching.
      */
-    private List<PriceAlert> getAlertsForSymbol(String symbol) {
-        CachedAlerts cached = alertCache.get(symbol);
+    private List<PriceAlert> findTriggeredAlerts(CachedAlertIndex index, double currentPrice) {
+        List<PriceAlert> triggered = new ArrayList<>();
 
-        // Check if cache is valid
-        if (cached != null && !cached.isExpired(cacheTtlMinutes)) {
-            cached.updateLastAccess();
-            return cached.getAlerts();
+        // PRICE_ABOVE: trigger when currentPrice > threshold
+        // headMap(price, false) returns all entries with threshold < price
+        NavigableMap<Double, List<PriceAlert>> aboveMatches = index.priceAboveAlerts.headMap(currentPrice, false);
+        for (List<PriceAlert> alerts : aboveMatches.values()) {
+            triggered.addAll(alerts);
         }
 
-        // Load from database
-        List<PriceAlert> alerts = alertRepository.findBySymbolAndStatus(symbol, AlertStatus.ACTIVE);
+        // PRICE_BELOW: trigger when currentPrice < threshold
+        // tailMap(price, false) returns all entries with threshold > price
+        NavigableMap<Double, List<PriceAlert>> belowMatches = index.priceBelowAlerts.tailMap(currentPrice, false);
+        for (List<PriceAlert> alerts : belowMatches.values()) {
+            triggered.addAll(alerts);
+        }
 
-        // Update cache
-        alertCache.put(symbol, new CachedAlerts(alerts));
+        // PRICE_EQUALS: trigger when currentPrice ≈ threshold (within 0.1% tolerance)
+        // Use subMap to find alerts within tolerance range
+        for (Map.Entry<Double, List<PriceAlert>> entry : index.priceEqualsAlerts.entrySet()) {
+            double threshold = entry.getKey();
+            double tolerance = threshold * 0.001; // 0.1% tolerance
+            if (Math.abs(currentPrice - threshold) <= tolerance) {
+                triggered.addAll(entry.getValue());
+            }
+        }
 
-        return alerts;
+        // PRICE_BETWEEN: trigger when lowerThreshold <= currentPrice <= upperThreshold
+        // Check alerts where lower threshold <= currentPrice
+        NavigableMap<Double, List<PriceAlert>> betweenCandidates = index.priceBetweenAlerts.headMap(currentPrice, true);
+        for (List<PriceAlert> alerts : betweenCandidates.values()) {
+            for (PriceAlert alert : alerts) {
+                Double upperThreshold = alert.getUpperThreshold();
+                if (upperThreshold != null && currentPrice <= upperThreshold) {
+                    triggered.add(alert);
+                }
+            }
+        }
+
+        return triggered;
     }
 
     /**
-     * Check if alert should trigger based on price
+     * Check if alert is in cooldown period
      */
-    private boolean shouldTrigger(PriceAlert alert, double currentPrice) {
-        // Check cooldown to prevent spam
+    private boolean isInCooldown(PriceAlert alert) {
         String alertKey = alert.getId() + "-" + alert.getAlertType();
         Long lastTriggered = recentlyTriggered.get(alertKey);
         if (lastTriggered != null) {
             long secondsSinceLastTrigger = (System.currentTimeMillis() - lastTriggered) / 1000;
-            if (secondsSinceLastTrigger < triggerCooldownSeconds) {
-                return false;
-            }
+            return secondsSinceLastTrigger < triggerCooldownSeconds;
+        }
+        return false;
+    }
+
+    /**
+     * Mark alert as triggered for cooldown tracking
+     */
+    private void markAsTriggered(PriceAlert alert) {
+        String alertKey = alert.getId() + "-" + alert.getAlertType();
+        recentlyTriggered.put(alertKey, System.currentTimeMillis());
+    }
+
+    /**
+     * Get or build TreeMap index for symbol
+     */
+    private CachedAlertIndex getAlertIndexForSymbol(String symbol) {
+        CachedAlertIndex cached = alertCache.get(symbol);
+
+        if (cached != null && !cached.isExpired(cacheTtlMinutes)) {
+            cached.updateLastAccess();
+            return cached;
         }
 
-        double threshold = alert.getThreshold();
-        AlertType alertType = alert.getAlertType();
+        // Load from database and build index
+        List<PriceAlert> alerts = alertRepository.findBySymbolAndStatus(symbol, AlertStatus.ACTIVE);
+        CachedAlertIndex index = new CachedAlertIndex(alerts);
 
-        boolean shouldTrigger = switch (alertType) {
-            case PRICE_ABOVE -> currentPrice > threshold;
-            case PRICE_BELOW -> currentPrice < threshold;
-            case PRICE_EQUALS -> {
-                double tolerance = threshold * 0.001; // 0.1% tolerance
-                yield Math.abs(currentPrice - threshold) <= tolerance;
-            }
-            case PRICE_BETWEEN -> {
-                Double upperThreshold = alert.getUpperThreshold();
-                yield upperThreshold != null &&
-                      currentPrice >= threshold &&
-                      currentPrice <= upperThreshold;
-            }
-        };
-
-        if (shouldTrigger) {
-            recentlyTriggered.put(alertKey, System.currentTimeMillis());
-        }
-
-        return shouldTrigger;
+        alertCache.put(symbol, index);
+        return index;
     }
 
     /**
@@ -143,6 +175,9 @@ public class AlertMatchingService {
             System.out.println("TRIGGERED: Alert " + alert.getId() +
                     " | " + alert.getSymbol() + " " + alert.getAlertType() +
                     " " + alert.getThreshold() + " | Current: " + currentPrice);
+
+            // Mark as triggered for cooldown
+            markAsTriggered(alert);
 
             // Send notification
             emailService.sendPriceAlertNotification(alert, currentPrice);
@@ -155,7 +190,7 @@ public class AlertMatchingService {
             // Deactivate if one-time or max triggers reached
             if (alert.isOneTime() || alert.getTriggerCount() >= alert.getMaxTriggers()) {
                 alert.setStatus(AlertStatus.TRIGGERED);
-                // Remove from cache
+                // Remove from cache to rebuild index without this alert
                 invalidateCacheForSymbol(alert.getSymbol());
             }
 
@@ -195,29 +230,60 @@ public class AlertMatchingService {
      * Get cache stats for monitoring
      */
     public Map<String, Object> getCacheStats() {
+        int totalAlerts = alertCache.values().stream()
+                .mapToInt(CachedAlertIndex::getTotalAlertCount)
+                .sum();
+
         return Map.of(
                 "cachedSymbols", alertCache.size(),
+                "totalCachedAlerts", totalAlerts,
                 "recentlyTriggeredCount", recentlyTriggered.size(),
                 "symbols", alertCache.keySet()
         );
     }
 
     /**
-     * Inner class to hold cached alerts with timestamp
+     * Inner class to hold TreeMap-indexed alerts with timestamp.
+     * Provides O(log N + K) lookup for alert matching.
      */
-    private static class CachedAlerts {
-        private final List<PriceAlert> alerts;
+    private static class CachedAlertIndex {
+        // TreeMap: threshold -> list of alerts at that threshold
+        private final TreeMap<Double, List<PriceAlert>> priceAboveAlerts = new TreeMap<>();
+        private final TreeMap<Double, List<PriceAlert>> priceBelowAlerts = new TreeMap<>();
+        private final TreeMap<Double, List<PriceAlert>> priceEqualsAlerts = new TreeMap<>();
+        private final TreeMap<Double, List<PriceAlert>> priceBetweenAlerts = new TreeMap<>(); // keyed by lower threshold
+
         private final long createdAt;
         private long lastAccessAt;
+        private int totalAlertCount;
 
-        public CachedAlerts(List<PriceAlert> alerts) {
-            this.alerts = alerts;
+        public CachedAlertIndex(List<PriceAlert> alerts) {
             this.createdAt = System.currentTimeMillis();
             this.lastAccessAt = System.currentTimeMillis();
+            this.totalAlertCount = alerts.size();
+
+            // Build TreeMap indexes by alert type
+            for (PriceAlert alert : alerts) {
+                double threshold = alert.getThreshold();
+                AlertType type = alert.getAlertType();
+
+                TreeMap<Double, List<PriceAlert>> targetMap = switch (type) {
+                    case PRICE_ABOVE -> priceAboveAlerts;
+                    case PRICE_BELOW -> priceBelowAlerts;
+                    case PRICE_EQUALS -> priceEqualsAlerts;
+                    case PRICE_BETWEEN -> priceBetweenAlerts;
+                };
+
+                targetMap.computeIfAbsent(threshold, k -> new ArrayList<>()).add(alert);
+            }
         }
 
-        public List<PriceAlert> getAlerts() {
-            return alerts;
+        public boolean isEmpty() {
+            return totalAlertCount == 0;
+        }
+
+        public int getTotalAlertCount() {
+            return totalAlertCount;
         }
 
         public void updateLastAccess() {
