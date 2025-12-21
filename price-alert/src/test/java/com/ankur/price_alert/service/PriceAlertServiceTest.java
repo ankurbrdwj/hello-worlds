@@ -6,6 +6,7 @@ import com.ankur.price_alert.model.PriceAlert;
 import com.ankur.price_alert.model.PriceUpdate;
 import com.ankur.price_alert.model.User;
 import com.ankur.price_alert.repository.PriceAlertRepository;
+import com.ankur.price_alert.strategy.AlertStrategyFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +27,11 @@ public class PriceAlertServiceTest {
     private PriceAlertRepository alertRepository;
 
     @Mock
-    private EmailService emailService;
+    private NotificationService notificationService;
+
+    @Mock
+    private AlertStrategyFactory strategyFactory;
+
     @InjectMocks
     private PriceAlertService alertService;
 
@@ -38,14 +43,14 @@ public class PriceAlertServiceTest {
     }
 
     @Test
-    void evaluate_NoActiveAlerts_ShouldNotSendEmail() {
+    void evaluate_NoActiveAlerts_ShouldNotSendNotification() {
         // Given
         when(alertRepository.findBySymbolAndStatusActive("TCS"))
                 .thenReturn(Collections.emptyList());
         // When
         alertService.evaluate(priceUpdate);
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
         verify(alertRepository, never()).save(any());
     }
 
@@ -61,15 +66,22 @@ public class PriceAlertServiceTest {
     }
 
     @Test
-    void evaluate_PriceAboveAlert_CurrentPriceAboveThreshold_ShouldTrigger() {
+    void evaluate_PriceAboveAlert_CurrentPriceAboveThreshold_ShouldTrigger() throws InterruptedException {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 3400.0);
         when(alertRepository.findBySymbolAndStatusActive("TCS"))
                 .thenReturn(Arrays.asList(alert));
+        // Mock strategy factory to return true for shouldTrigger
+        when(strategyFactory.shouldTrigger(alert, 3500.0)).thenReturn(true);
+
         // When - Current price (3500) > Threshold (3400)
         alertService.evaluate(priceUpdate);
+
+        // Wait for async notification (CompletableFuture.runAsync)
+        Thread.sleep(100);
+
         // Then
-        verify(emailService).sendPriceAlertNotification(alert, 3500.0);
+        verify(notificationService).sendPriceAlertNotification(alert, 3500.0);
         verify(alertRepository).save(alert);
         assertEquals(AlertStatus.TRIGGERED, alert.getStatus());
     }

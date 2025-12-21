@@ -2,19 +2,33 @@ package com.ankur.price_alert.service;
 
 import com.ankur.price_alert.model.AlertType;
 import com.ankur.price_alert.model.PriceAlert;
+import com.ankur.price_alert.strategy.AlertStrategyFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Email implementation of NotificationService.
+ * Follows Dependency Inversion Principle - implements NotificationService interface.
+ * Follows Single Responsibility Principle - handles email notifications only.
+ */
 @Service
-public class EmailService {
+public class EmailService implements NotificationService {
+
+    private final AlertStrategyFactory strategyFactory;
+
+    public EmailService(AlertStrategyFactory strategyFactory) {
+        this.strategyFactory = strategyFactory;
+    }
+
+    @Override
     public void sendPriceAlertNotification(PriceAlert alert, double currentPrice) {
         try {
             String subject = buildAlertSubject(alert, currentPrice);
             String body = buildAlertEmailBody(alert, currentPrice);
 
-            sendEmail(alert.getUserEmail(), subject, body);
+            send(alert.getUserEmail(), subject, body);
 
             System.out.println("✅ Price alert sent to: " + alert.getUserEmail());
 
@@ -23,7 +37,8 @@ public class EmailService {
             throw e; // Re-throw to handle in calling service
         }
     }
-    public void sendEmail(String to, String subject, String body) {
+    @Override
+    public void send(String to, String subject, String body) {
         try {
             // Option 1: Using Spring Boot's JavaMailSender
             //sendEmailWithSpringMail(to, subject, body);
@@ -100,34 +115,17 @@ public class EmailService {
     }
 
     /**
-     * Get action text for alert type
+     * Get action text for alert type using strategy pattern.
      */
     private String getAlertActionText(AlertType alertType) {
-        switch (alertType) {
-            case PRICE_ABOVE: return "rose above";
-            case PRICE_BELOW: return "dropped below";
-            case PRICE_EQUALS: return "reached";
-            case PRICE_BETWEEN: return "moved within range";
-            default: return "triggered at";
-        }
+        return strategyFactory.getActionText(alertType);
     }
+
+    /**
+     * Get explanation for triggered alert using strategy pattern.
+     */
     private String getAlertExplanation(PriceAlert alert, double currentPrice) {
-        switch (alert.getAlertType()) {
-            case PRICE_ABOVE:
-                return String.format("The price of %s rose above your threshold of $%.2f, reaching $%.2f.",
-                        alert.getSymbol(), alert.getThreshold(), currentPrice);
-            case PRICE_BELOW:
-                return String.format("The price of %s dropped below your threshold of $%.2f, reaching $%.2f.",
-                        alert.getSymbol(), alert.getThreshold(), currentPrice);
-            case PRICE_EQUALS:
-                return String.format("The price of %s reached your target price of $%.2f (currently at $%.2f).",
-                        alert.getSymbol(), alert.getThreshold(), currentPrice);
-            case PRICE_BETWEEN:
-                return String.format("The price of %s moved within your specified range, currently at $%.2f.",
-                        alert.getSymbol(), currentPrice);
-            default:
-                return String.format("Your price alert condition for %s has been met.", alert.getSymbol());
-        }
+        return strategyFactory.getExplanation(alert, currentPrice);
     }
     private String buildEmailBody(PriceAlert alert, double currentPrice) {
         return String.format("""

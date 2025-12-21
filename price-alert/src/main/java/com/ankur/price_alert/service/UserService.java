@@ -1,5 +1,8 @@
 package com.ankur.price_alert.service;
 
+import com.ankur.price_alert.exception.AlertQuotaExceededException;
+import com.ankur.price_alert.exception.DuplicateResourceException;
+import com.ankur.price_alert.exception.UserNotFoundException;
 import com.ankur.price_alert.model.NotificationChannel;
 import com.ankur.price_alert.model.User;
 import com.ankur.price_alert.repository.UserRepository;
@@ -9,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service for user management.
+ * Uses custom exception hierarchy for better error handling.
+ */
 @Service
 @Transactional
 public class UserService {
@@ -23,7 +30,7 @@ public class UserService {
 
     public User createUser(String email, String name) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("User with email " + email + " already exists");
+            throw new DuplicateResourceException("User", email);
         }
 
         User user = User.builder()
@@ -36,7 +43,7 @@ public class UserService {
 
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("User with email " + user.getEmail() + " already exists");
+            throw new DuplicateResourceException("User", user.getEmail());
         }
         return userRepository.save(user);
     }
@@ -56,13 +63,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     @Transactional(readOnly = true)
     public User getById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
@@ -127,7 +134,7 @@ public class UserService {
 
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new IllegalArgumentException("User not found with id: " + id);
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
     }
@@ -144,6 +151,21 @@ public class UserService {
         User user = getById(userId);
         int currentAlertCount = user.getAlerts().size();
         return currentAlertCount < user.getMaxAlerts();
+    }
+
+    /**
+     * Validates that user can create more alerts, throws exception if quota exceeded.
+     *
+     * @param userId the user ID
+     * @throws AlertQuotaExceededException if user has reached their alert limit
+     */
+    @Transactional(readOnly = true)
+    public void validateAlertQuota(Long userId) {
+        User user = getById(userId);
+        int currentAlertCount = user.getAlerts().size();
+        if (currentAlertCount >= user.getMaxAlerts()) {
+            throw new AlertQuotaExceededException(userId, currentAlertCount, user.getMaxAlerts());
+        }
     }
 
     @Transactional(readOnly = true)

@@ -8,7 +8,6 @@ import com.ankur.price_alert.repository.PriceAlertRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -16,10 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -30,7 +30,10 @@ class AlertMatchingServiceTest {
     private PriceAlertRepository alertRepository;
 
     @Mock
-    private EmailService emailService;
+    private NotificationService notificationService;
+
+    @Mock
+    private AlertCacheService alertCacheService;
 
     private AlertMatchingService alertMatchingService;
 
@@ -38,7 +41,7 @@ class AlertMatchingServiceTest {
 
     @BeforeEach
     void setUp() {
-        alertMatchingService = new AlertMatchingService(alertRepository, emailService);
+        alertMatchingService = new AlertMatchingService(alertRepository, notificationService, alertCacheService);
 
         testUser = User.builder()
                 .id(1L)
@@ -53,14 +56,14 @@ class AlertMatchingServiceTest {
     void processPrice_PriceAboveThreshold_ShouldTriggerAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 400.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 > threshold 400
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService).sendPriceAlertNotification(eq(alert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(alert), eq(450.0));
         verify(alertRepository).save(alert);
         assertEquals(1, alert.getTriggerCount());
         assertEquals(AlertStatus.TRIGGERED, alert.getStatus());
@@ -70,14 +73,14 @@ class AlertMatchingServiceTest {
     void processPrice_PriceBelowThreshold_ShouldNotTriggerAboveAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 500.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 < threshold 500
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
         verify(alertRepository, never()).save(any());
     }
 
@@ -85,14 +88,14 @@ class AlertMatchingServiceTest {
     void processPrice_PriceEqualsThreshold_ShouldNotTriggerAboveAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 450.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 == threshold 450 (not greater than)
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
     }
 
     // ==================== PRICE_BELOW Tests ====================
@@ -101,14 +104,14 @@ class AlertMatchingServiceTest {
     void processPrice_PriceBelowThreshold_ShouldTriggerBelowAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_BELOW, 500.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 < threshold 500
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService).sendPriceAlertNotification(eq(alert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(alert), eq(450.0));
         verify(alertRepository).save(alert);
     }
 
@@ -116,14 +119,14 @@ class AlertMatchingServiceTest {
     void processPrice_PriceAboveThreshold_ShouldNotTriggerBelowAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_BELOW, 400.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 > threshold 400
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
     }
 
     // ==================== PRICE_EQUALS Tests ====================
@@ -132,28 +135,28 @@ class AlertMatchingServiceTest {
     void processPrice_PriceWithinTolerance_ShouldTriggerEqualsAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_EQUALS, 450.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450.40 is within 0.1% of 450 (tolerance = 0.45)
         alertMatchingService.processPrice("TCS", 450.40);
 
         // Then
-        verify(emailService).sendPriceAlertNotification(eq(alert), eq(450.40));
+        verify(notificationService).sendPriceAlertNotification(eq(alert), eq(450.40));
     }
 
     @Test
     void processPrice_PriceOutsideTolerance_ShouldNotTriggerEqualsAlert() {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_EQUALS, 450.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 455 is outside 0.1% of 450 (tolerance = 0.45)
         alertMatchingService.processPrice("TCS", 455.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
     }
 
     // ==================== PRICE_BETWEEN Tests ====================
@@ -163,14 +166,14 @@ class AlertMatchingServiceTest {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_BETWEEN, 400.0);
         alert.setUpperThreshold(500.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450 is between 400 and 500
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService).sendPriceAlertNotification(eq(alert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(alert), eq(450.0));
     }
 
     @Test
@@ -178,14 +181,14 @@ class AlertMatchingServiceTest {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_BETWEEN, 400.0);
         alert.setUpperThreshold(450.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 500 is outside 400-450 range
         alertMatchingService.processPrice("TCS", 500.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
     }
 
     @Test
@@ -193,99 +196,14 @@ class AlertMatchingServiceTest {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_BETWEEN, 400.0);
         alert.setUpperThreshold(500.0);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price at lower bound
         alertMatchingService.processPrice("TCS", 400.0);
 
         // Then
-        verify(emailService).sendPriceAlertNotification(eq(alert), eq(400.0));
-    }
-
-    // ==================== Cache Tests ====================
-
-    @Test
-    void processPrice_FirstCall_ShouldQueryDatabase() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        alertMatchingService.processPrice("TCS", 450.0);
-
-        // Then
-        verify(alertRepository).findBySymbolAndStatus("TCS", AlertStatus.ACTIVE);
-    }
-
-    @Test
-    void processPrice_SecondCall_ShouldUseCacheNotDatabase() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Collections.emptyList());
-
-        // When - two calls
-        alertMatchingService.processPrice("TCS", 450.0);
-        alertMatchingService.processPrice("TCS", 451.0);
-
-        // Then - DB should be called only once (second call uses cache)
-        verify(alertRepository, times(1)).findBySymbolAndStatus("TCS", AlertStatus.ACTIVE);
-    }
-
-    @Test
-    void processPrice_DifferentSymbols_ShouldQueryDatabaseForEach() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus(anyString(), eq(AlertStatus.ACTIVE)))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        alertMatchingService.processPrice("TCS", 450.0);
-        alertMatchingService.processPrice("INFY", 1500.0);
-
-        // Then
-        verify(alertRepository).findBySymbolAndStatus("TCS", AlertStatus.ACTIVE);
-        verify(alertRepository).findBySymbolAndStatus("INFY", AlertStatus.ACTIVE);
-    }
-
-    @Test
-    void invalidateCacheForSymbol_ShouldForceDbQueryOnNextCall() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Collections.emptyList());
-
-        // First call - loads cache
-        alertMatchingService.processPrice("TCS", 450.0);
-
-        // Invalidate cache
-        alertMatchingService.invalidateCacheForSymbol("TCS");
-
-        // Second call - should query DB again
-        alertMatchingService.processPrice("TCS", 451.0);
-
-        // Then - DB should be called twice
-        verify(alertRepository, times(2)).findBySymbolAndStatus("TCS", AlertStatus.ACTIVE);
-    }
-
-    @Test
-    void invalidateAllCache_ShouldForceDbQueryForAllSymbols() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus(anyString(), eq(AlertStatus.ACTIVE)))
-                .thenReturn(Collections.emptyList());
-
-        // First calls - loads cache
-        alertMatchingService.processPrice("TCS", 450.0);
-        alertMatchingService.processPrice("INFY", 1500.0);
-
-        // Invalidate all cache
-        alertMatchingService.invalidateAllCache();
-
-        // Second calls - should query DB again
-        alertMatchingService.processPrice("TCS", 451.0);
-        alertMatchingService.processPrice("INFY", 1501.0);
-
-        // Then - DB should be called 4 times (2 initial + 2 after invalidate)
-        verify(alertRepository, times(2)).findBySymbolAndStatus("TCS", AlertStatus.ACTIVE);
-        verify(alertRepository, times(2)).findBySymbolAndStatus("INFY", AlertStatus.ACTIVE);
+        verify(notificationService).sendPriceAlertNotification(eq(alert), eq(400.0));
     }
 
     // ==================== Multiple Alerts Tests ====================
@@ -300,16 +218,16 @@ class AlertMatchingServiceTest {
         PriceAlert alert3 = createAlert(AlertType.PRICE_ABOVE, 500.0); // should NOT trigger
         alert3.setId(3L);
 
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert1, alert2, alert3));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert1, alert2, alert3));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then - alert1 and alert2 should trigger, alert3 should not
-        verify(emailService).sendPriceAlertNotification(eq(alert1), eq(450.0));
-        verify(emailService).sendPriceAlertNotification(eq(alert2), eq(450.0));
-        verify(emailService, never()).sendPriceAlertNotification(eq(alert3), anyDouble());
+        verify(notificationService).sendPriceAlertNotification(eq(alert1), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(alert2), eq(450.0));
+        verify(notificationService, never()).sendPriceAlertNotification(eq(alert3), anyDouble());
     }
 
     @Test
@@ -322,16 +240,16 @@ class AlertMatchingServiceTest {
         PriceAlert equalsAlert = createAlert(AlertType.PRICE_EQUALS, 450.0);
         equalsAlert.setId(3L);
 
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(aboveAlert, belowAlert, equalsAlert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(aboveAlert, belowAlert, equalsAlert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - price 450
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then - all three should trigger
-        verify(emailService).sendPriceAlertNotification(eq(aboveAlert), eq(450.0));
-        verify(emailService).sendPriceAlertNotification(eq(belowAlert), eq(450.0));
-        verify(emailService).sendPriceAlertNotification(eq(equalsAlert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(aboveAlert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(belowAlert), eq(450.0));
+        verify(notificationService).sendPriceAlertNotification(eq(equalsAlert), eq(450.0));
     }
 
     // ==================== One-Time Alert Tests ====================
@@ -341,8 +259,8 @@ class AlertMatchingServiceTest {
         // Given
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 400.0);
         alert.setOneTime(true);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When
         alertMatchingService.processPrice("TCS", 450.0);
@@ -350,6 +268,7 @@ class AlertMatchingServiceTest {
         // Then
         assertEquals(AlertStatus.TRIGGERED, alert.getStatus());
         verify(alertRepository).save(alert);
+        verify(alertCacheService).invalidateCacheForSymbol("TCS");
     }
 
     @Test
@@ -358,8 +277,8 @@ class AlertMatchingServiceTest {
         PriceAlert alert = createAlert(AlertType.PRICE_ABOVE, 400.0);
         alert.setOneTime(false);
         alert.setMaxTriggers(5);
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When
         alertMatchingService.processPrice("TCS", 450.0);
@@ -376,8 +295,8 @@ class AlertMatchingServiceTest {
         alert.setOneTime(false);
         alert.setMaxTriggers(3);
         alert.setTriggerCount(2); // Already triggered twice
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
         // When - third trigger
         alertMatchingService.processPrice("TCS", 450.0);
@@ -392,63 +311,43 @@ class AlertMatchingServiceTest {
     @Test
     void processPrice_NoAlertsForSymbol_ShouldNotSendNotification() {
         // Given
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Collections.emptyList());
+        AlertCacheService.CachedAlertIndex emptyIndex = createCacheIndex(Collections.emptyList());
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(emptyIndex);
 
         // When
         alertMatchingService.processPrice("TCS", 450.0);
 
         // Then
-        verify(emailService, never()).sendPriceAlertNotification(any(), anyDouble());
-    }
-
-    // ==================== Cache Stats Tests ====================
-
-    @Test
-    void getCacheStats_ShouldReturnCorrectStats() {
-        // Given
-        when(alertRepository.findBySymbolAndStatus(anyString(), eq(AlertStatus.ACTIVE)))
-                .thenReturn(Collections.emptyList());
-
-        alertMatchingService.processPrice("TCS", 450.0);
-        alertMatchingService.processPrice("INFY", 1500.0);
-
-        // When
-        Map<String, Object> stats = alertMatchingService.getCacheStats();
-
-        // Then
-        assertEquals(2, stats.get("cachedSymbols"));
-        assertTrue(((java.util.Set<?>) stats.get("symbols")).contains("TCS"));
-        assertTrue(((java.util.Set<?>) stats.get("symbols")).contains("INFY"));
+        verify(notificationService, never()).sendPriceAlertNotification(any(), anyDouble());
     }
 
     // ==================== Error Handling Tests ====================
 
     @Test
-    void processPrice_DatabaseError_ShouldNotThrowException() {
+    void processPrice_CacheError_ShouldNotThrowException() {
         // Given
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenThrow(new RuntimeException("Database error"));
+        when(alertCacheService.getAlertIndexForSymbol("TCS"))
+                .thenThrow(new RuntimeException("Cache error"));
 
         // When/Then - should not throw
         assertDoesNotThrow(() -> alertMatchingService.processPrice("TCS", 450.0));
     }
 
     @Test
-    void processPrice_EmailServiceError_ShouldContinueProcessing() {
+    void processPrice_NotificationError_ShouldContinueProcessing() {
         // Given
         PriceAlert alert1 = createAlert(AlertType.PRICE_ABOVE, 400.0);
         alert1.setId(1L);
         PriceAlert alert2 = createAlert(AlertType.PRICE_ABOVE, 420.0);
         alert2.setId(2L);
 
-        when(alertRepository.findBySymbolAndStatus("TCS", AlertStatus.ACTIVE))
-                .thenReturn(Arrays.asList(alert1, alert2));
+        AlertCacheService.CachedAlertIndex index = createCacheIndex(Arrays.asList(alert1, alert2));
+        when(alertCacheService.getAlertIndexForSymbol("TCS")).thenReturn(index);
 
-        doThrow(new RuntimeException("Email error"))
-                .when(emailService).sendPriceAlertNotification(eq(alert1), anyDouble());
+        doThrow(new RuntimeException("Notification error"))
+                .when(notificationService).sendPriceAlertNotification(eq(alert1), anyDouble());
 
-        // When - should not throw even if first email fails
+        // When - should not throw even if first notification fails
         assertDoesNotThrow(() -> alertMatchingService.processPrice("TCS", 450.0));
     }
 
@@ -466,5 +365,9 @@ class AlertMatchingServiceTest {
                 .maxTriggers(1)
                 .triggerCount(0)
                 .build();
+    }
+
+    private AlertCacheService.CachedAlertIndex createCacheIndex(List<PriceAlert> alerts) {
+        return new AlertCacheService.CachedAlertIndex(alerts);
     }
 }

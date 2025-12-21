@@ -10,16 +10,17 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 /**
  * Handles incoming WebSocket messages from the market feed (partner-service).
- * Parses quote messages and forwards to AlertMatchingService.
+ * Parses quote messages and forwards to PriceProcessor.
+ * Follows Dependency Inversion Principle - depends on PriceProcessor interface.
  */
 @Component
 public class MarketFeedWebSocketHandler extends TextWebSocketHandler {
 
-    private final AlertMatchingService alertMatchingService;
+    private final PriceProcessor priceProcessor;
     private final ObjectMapper objectMapper;
 
-    public MarketFeedWebSocketHandler(AlertMatchingService alertMatchingService) {
-        this.alertMatchingService = alertMatchingService;
+    public MarketFeedWebSocketHandler(PriceProcessor priceProcessor) {
+        this.priceProcessor = priceProcessor;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -38,8 +39,8 @@ public class MarketFeedWebSocketHandler extends TextWebSocketHandler {
                 String symbol = feedMessage.getData().getIsin();
                 double price = feedMessage.getData().getPrice();
 
-                // Forward to alert matching service
-                alertMatchingService.processPrice(symbol, price);
+                // Forward to price processor
+                priceProcessor.processPrice(symbol, price);
             }
         } catch (Exception e) {
             System.err.println("Error processing feed message: " + e.getMessage());

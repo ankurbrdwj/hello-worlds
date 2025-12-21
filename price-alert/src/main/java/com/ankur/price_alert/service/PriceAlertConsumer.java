@@ -5,13 +5,17 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+/**
+ * Kafka consumer for price updates.
+ * Follows Dependency Inversion Principle - depends on AlertEvaluationService interface.
+ */
 @Service
 public class PriceAlertConsumer {
 
-    private final PriceAlertService priceAlertService;
+    private final AlertEvaluationService alertEvaluationService;
 
-    public PriceAlertConsumer(PriceAlertService priceAlertService) {
-        this.priceAlertService = priceAlertService;
+    public PriceAlertConsumer(AlertEvaluationService alertEvaluationService) {
+        this.alertEvaluationService = alertEvaluationService;
     }
 
     @KafkaListener(topics = "price_updates", groupId = "alert-service")
@@ -21,7 +25,7 @@ public class PriceAlertConsumer {
             double price = Double.parseDouble(record.value());
             System.out.println("📥 Received price update: " + symbol + " = " + price);
             PriceUpdate priceUpdate = new PriceUpdate(symbol, price);
-            priceAlertService.evaluate(priceUpdate);
+            alertEvaluationService.evaluate(priceUpdate);
         } catch (Exception e) {
             System.err.println("⚠️ Failed to parse message: " + record.value());
         }

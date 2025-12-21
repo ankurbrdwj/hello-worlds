@@ -5,6 +5,7 @@ import com.ankur.price_alert.model.AlertType;
 import com.ankur.price_alert.model.PriceAlert;
 import com.ankur.price_alert.model.PriceUpdate;
 import com.ankur.price_alert.repository.PriceAlertRepository;
+import com.ankur.price_alert.strategy.AlertStrategyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,26 +14,34 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static com.ankur.price_alert.model.AlertType.*;
-
+/**
+ * Implementation of AlertEvaluationService.
+ * Follows Dependency Inversion Principle - implements AlertEvaluationService interface.
+ * Follows Open/Closed Principle - uses strategy pattern for alert evaluation.
+ */
 @Service
-public class PriceAlertService {
+public class PriceAlertService implements AlertEvaluationService {
 
     private final PriceAlertRepository alertRepository;
-    private final EmailService emailService;
+    private final NotificationService notificationService;
+    private final AlertStrategyFactory strategyFactory;
 
     private final Set<String> recentlyTriggered = ConcurrentHashMap.newKeySet();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Autowired
-    public PriceAlertService(PriceAlertRepository alertRepository, EmailService emailService) {
+    public PriceAlertService(PriceAlertRepository alertRepository,
+                             NotificationService notificationService,
+                             AlertStrategyFactory strategyFactory) {
         this.alertRepository = alertRepository;
-        this.emailService = emailService;
+        this.notificationService = notificationService;
+        this.strategyFactory = strategyFactory;
 
         // Clean up triggered alerts cache every 5 minutes
         scheduler.scheduleWithFixedDelay(recentlyTriggered::clear, 5, 5, TimeUnit.MINUTES);
     }
 
+    @Override
     public void evaluate(PriceUpdate priceUpdate) {
         try{
             String symbol = priceUpdate.getSymbol();
@@ -66,7 +75,7 @@ public class PriceAlertService {
             // Send notification asynchronously
             CompletableFuture.runAsync(() -> {
                 try {
-                    emailService.sendPriceAlertNotification(alert, currentPrice);
+                    notificationService.sendPriceAlertNotification(alert, currentPrice);
                 } catch (Exception e) {
                     System.err.println("⚠️ Failed to send notification: " + e.getMessage());
                 }
@@ -80,43 +89,19 @@ public class PriceAlertService {
     }
 
 
+    /**
+     * Determine if alert should trigger using strategy pattern.
+     * Follows Open/Closed Principle - new alert types don't require modification here.
+     */
     private boolean shouldTriggerAlert(PriceAlert alert, double currentPrice) {
-
         // Check if already triggered recently (prevent spam)
         String alertKey = alert.getId() + "-" + (long)(currentPrice * 100); // Price rounded to cents
         if (recentlyTriggered.contains(alertKey)) {
             return false;
         }
 
-        AlertType alertType = alert.getAlertType();
-        double threshold = alert.getThreshold();
-
-        boolean shouldTrigger = false;
-
-        switch (alertType) {
-            case PRICE_ABOVE:
-                shouldTrigger = currentPrice > threshold;
-                break;
-
-            case PRICE_BELOW:
-                shouldTrigger = currentPrice < threshold;
-                break;
-
-            case PRICE_EQUALS:
-                // Within 0.1% tolerance
-                double tolerance = threshold * 0.001;
-                shouldTrigger = Math.abs(currentPrice - threshold) <= tolerance;
-                break;
-
-            case PRICE_BETWEEN:
-                // For range alerts: threshold stores lower bound, upperThreshold stores upper bound
-                shouldTrigger = currentPrice >= threshold && currentPrice <= alert.getUpperThreshold();
-                break;
-
-            default:
-                System.err.println("⚠️ Unknown alert type: " + alertType);
-                return false;
-        }
+        // Use strategy pattern for alert evaluation
+        boolean shouldTrigger = strategyFactory.shouldTrigger(alert, currentPrice);
 
         if (shouldTrigger) {
             // Add to recently triggered to prevent immediate duplicates
