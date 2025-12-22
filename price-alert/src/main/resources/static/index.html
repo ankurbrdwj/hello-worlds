@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Price Alert</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+        label { display:block; margin-top:12px; font-weight:600; }
+        input, select, button { width:100%; padding:8px; margin-top:6px; box-sizing:border-box; }
+        .inline { display:flex; gap:8px; }
+        .inline > * { flex:1; }
+        .msg { margin-top:12px; padding:10px; border-radius:4px; display:none; }
+        .msg.success { background:#e6ffea; color:#1a7f37; display:block; }
+        .msg.error { background:#ffe6e6; color:#8a1a1a; display:block; }
+    </style>
+</head>
+<body>
+<h1>Create Price Alert (test userId: 1)</h1>
+
+<form id="alertForm" autocomplete="off">
+    <label for="symbol">Stock Symbol</label>
+    <input id="symbol" type="text" required placeholder="AAPL" maxlength="20" />
+
+    <div class="inline">
+        <div>
+            <label for="price">Price (threshold)</label>
+            <input id="price" type="number" step="0.01" required placeholder="123.45" />
+        </div>
+        <div>
+            <label for="condition">Condition</label>
+            <select id="condition" required>
+                <option value="GREATER">GREATER</option>
+                <option value="LESS">LESS</option>
+                <option value="PRICE_BETWEEN">PRICE_BETWEEN</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="upperWrap" style="display:none;">
+        <label for="upper">Upper threshold (for PRICE_BETWEEN)</label>
+        <input id="upper" type="number" step="0.01" placeholder="125.00" />
+    </div>
+
+    <label for="oneTime" style="margin-top:12px;">
+        <input id="oneTime" type="checkbox" /> One-time alert
+    </label>
+
+    <label for="maxTriggers">Max triggers</label>
+    <input id="maxTriggers" type="number" min="1" value="1" />
+
+    <button type="submit">Save Alert</button>
+
+    <div id="message" class="msg"></div>
+</form>
+
+<script>
+    const form = document.getElementById('alertForm');
+    const msgEl = document.getElementById('message');
+    const condition = document.getElementById('condition');
+    const upperWrap = document.getElementById('upperWrap');
+
+    condition.addEventListener('change', () => {
+      upperWrap.style.display = condition.value === 'PRICE_BETWEEN' ? 'block' : 'none';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgEl.style.display = 'none';
+
+      const symbol = document.getElementById('symbol').value.trim().toUpperCase();
+      const threshold = parseFloat(document.getElementById('price').value);
+      const alertType = document.getElementById('condition').value; // must match enum names
+      const upperThresholdInput = document.getElementById('upper').value;
+      const upperThreshold = alertType === 'PRICE_BETWEEN'
+        ? (upperThresholdInput === '' ? null : parseFloat(upperThresholdInput))
+        : null;
+
+      const payload = {
+        userId: 1, // hard-coded for testing
+        symbol: symbol,
+        alertType: alertType,
+        threshold: isNaN(threshold) ? null : threshold,
+        upperThreshold: upperThreshold,
+        oneTime: document.getElementById('oneTime').checked,
+        maxTriggers: Math.max(1, parseInt(document.getElementById('maxTriggers').value || '1', 10))
+      };
+
+      // Basic validation to match DTO expectations
+      if (!payload.symbol || payload.threshold === null || (alertType === 'PRICE_BETWEEN' && (payload.upperThreshold === null || isNaN(payload.upperThreshold)))) {
+        showMessage('Fill symbol and threshold correctly. If using PRICE_BETWEEN provide upper threshold.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          showMessage('Alert saved successfully.', 'success');
+          form.reset();
+          upperWrap.style.display = 'none';
+        } else {
+          const text = await res.text();
+          showMessage('Save failed: ' + (text || res.statusText), 'error');
+        }
+      } catch (err) {
+        showMessage('Network error: ' + err.message, 'error');
+      }
+    });
+
+    function showMessage(text, type) {
+      msgEl.textContent = text;
+      msgEl.className = 'msg ' + (type === 'success' ? 'success' : 'error');
+      msgEl.style.display = 'block';
+    }
+</script>
+</body>
+</html>
