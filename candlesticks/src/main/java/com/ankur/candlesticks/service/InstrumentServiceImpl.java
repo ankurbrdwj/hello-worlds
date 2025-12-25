@@ -2,14 +2,12 @@ package com.ankur.candlesticks.service;
 
 import com.ankur.candlesticks.entity.Instrument;
 import com.ankur.candlesticks.repository.InstrumentsRepository;
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.client.WebSocketClient;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -18,29 +16,53 @@ public class InstrumentServiceImpl implements InstrumentService {
 
   private final InstrumentsRepository instrumentsRepository;
 
-  private final Map<String, String> instruments = new ConcurrentHashMap<>();
-
   @Override
+  @Transactional
   public void addInstrument(String isin, String description) {
-    Instrument instrument= Instrument.builder()
-      .setIsin(isin)
+    // Check if ISIN exists (could be inactive - ISIN reuse case)
+    Instrument existing = instrumentsRepository.findByIsin(isin);
+
+    if (existing != null) {
+      // ISIN reuse: reactivate existing instrument
+      log.info("Reactivating instrument: {}", isin);
+      existing.setActive(true);
+      existing.setDescription(description);
+      existing.setDeletedAt(null);
+      instrumentsRepository.save(existing);
+    } else {
+      // New instrument
+      log.info("Adding new instrument: {}", isin);
+      Instrument instrument = Instrument.builder()
+          .setIsin(isin)
           .setDescription(description)
-            .build();
-    instrumentsRepository.save(instrument);
-    instruments.put(isin, description);
+          .setActive(true)
+          .build();
+      instrumentsRepository.save(instrument);
+    }
   }
 
   @Override
   public List<Instrument> getInstrumentsFromLastMinutes(int minutes) {
-    return List.of();
+    Instant cutoff = Instant.now().minusSeconds(minutes * 60L);
+    return instrumentsRepository.findActiveInstrumentsAfter(cutoff);
   }
 
   @Override
+  @Transactional
   public void deleteInstrument(String isin) {
-    instruments.remove(isin);
+    Instrument instrument = instrumentsRepository.findByIsin(isin);
+    if (instrument != null) {
+      log.info("Deactivating instrument: {}", isin);
+      instrument.setActive(false);
+      instrument.setDeletedAt(Instant.now());
+      instrumentsRepository.save(instrument);
+    } else {
+      log.warn("Attempted to delete non-existent instrument: {}", isin);
+    }
   }
 
+  @Override
   public boolean instrumentExists(String isin) {
-    return instruments.containsKey(isin);
+    return instrumentsRepository.existsByIsinAndActive(isin, true);
   }
 }

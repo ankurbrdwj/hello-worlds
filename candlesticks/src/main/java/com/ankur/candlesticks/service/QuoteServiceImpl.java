@@ -48,21 +48,27 @@ public class QuoteServiceImpl implements QuoteService {
 
     // Check if the instrument is null
     if (instrument == null) {
-      log.error("Instrument with ISIN {} not found.", isin);
-      //throw new IllegalArgumentException("Instrument with ISIN " + isin + " not found");
-    }else {
+      log.warn("Quote rejected: Instrument with ISIN {} not found.", isin);
+      return;
+    }
 
-      // Create a new Quote object if the instrument exists
-      Quote quote = Quote.builder()
-        .setInstrument(instrument) // Set the instrument
-        .setPrice(price)           // Set the price
+    // Check if the instrument is active (not deleted)
+    if (!instrument.isActive()) {
+      log.warn("Quote rejected: Instrument with ISIN {} is not active (deleted).", isin);
+      return;
+    }
+
+    // Create a new Quote object if the instrument exists and is active
+    Quote quote = Quote.builder()
+        .setInstrument(instrument)
+        .setPrice(price)
         .build();
 
-      // Save the quote to the repository
-      quoteRepository.save(quote);
+    // Save the quote to the repository
+    quoteRepository.save(quote);
 
-      // Optionally, update the quotes map
-      quotes.put(isin, String.valueOf(price));
-    }
+    // Optionally, update the quotes map
+    quotes.put(isin, String.valueOf(price));
+    log.debug("Quote saved: ISIN={}, price={}", isin, price);
   }
 }

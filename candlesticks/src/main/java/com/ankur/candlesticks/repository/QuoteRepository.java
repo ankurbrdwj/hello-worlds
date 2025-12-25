@@ -15,7 +15,7 @@ public interface QuoteRepository extends JpaRepository<Quote, UUID> {
   @Query("SELECT q FROM Quote q WHERE q.createdTime >= :minutesAgo")
   List<Quote> findQuotesAfter(@Param("minutesAgo") Instant minutesAgo);
   // Fetch quotes for an instrument within a given time period
-  @Query("SELECT q FROM Quote q WHERE q.instrument.isin = :isin AND date_trunc('second', q.createdTime) BETWEEN :startTime AND :endTime ORDER BY q.createdTime ASC")
+  @Query("SELECT q FROM Quote q WHERE q.instrument.isin = :isin AND q.createdTime >= :startTime AND q.createdTime <= :endTime ORDER BY q.createdTime ASC")
   List<Quote> findQuotesForInstrumentInTimePeriod(@Param("isin") String isin, @Param("startTime") Instant startTime, @Param("endTime") Instant endTime);
 }
 

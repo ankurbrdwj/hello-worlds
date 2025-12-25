@@ -1,44 +1,82 @@
 package com.ankur.candlesticks.service;
 
 import com.ankur.candlesticks.dto.Candlestick;
+import com.ankur.candlesticks.entity.Quote;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class CandlestickServiceImpl implements CandlestickService{
+@Service
+public class CandlestickServiceImpl implements CandlestickService {
 
-  private final Map<String, List<Candlestick>> candlesticks = new ConcurrentHashMap<>();
+    private final QuoteService quoteService;
 
-  public List<Candlestick> getCandlesticks(String isin) {
-    return candlesticks.getOrDefault(isin, Collections.emptyList());
-  }
-  public void updateCandlestick(String isin, double price) {
-    LocalDateTime now = LocalDateTime.now();
-    List<Candlestick> candles = candlesticks.computeIfAbsent(isin, k -> new ArrayList<>());
-
-    if (candles.isEmpty() || isNewMinute(candles.getLast(), now)) {
-      Candlestick newCandle = new Candlestick();
-      newCandle.setOpenTimestamp(now.truncatedTo(ChronoUnit.MINUTES));
-      newCandle.setOpenPrice(price);
-      newCandle.setHighPrice(price);
-      newCandle.setLowPrice(price);
-      newCandle.setClosePrice(price);
-      newCandle.setCloseTimestamp(now);
-      candles.add(newCandle);
-    } else {
-      Candlestick currentCandle = candles.getLast();
-      currentCandle.setHighPrice(Math.max(currentCandle.getHighPrice(), price));
-      currentCandle.setLowPrice(Math.min(currentCandle.getLowPrice(), price));
-      currentCandle.setClosePrice(price);
-      currentCandle.setCloseTimestamp(now);
+    public CandlestickServiceImpl(QuoteService quoteService) {
+        this.quoteService = quoteService;
     }
-  }
 
-  private boolean isNewMinute(Candlestick candle, LocalDateTime now) {
-    return now.truncatedTo(ChronoUnit.MINUTES).isAfter(candle.getOpenTimestamp());
+    /**
+     * Build candlesticks from a list of Quote entities.
+     * Groups quotes by minute and creates OHLC candlesticks.
+     *
+     * @param quotes List of Quote entities (from database)
+     * @return List of Candlesticks grouped by minute, sorted by time
+     */
+    @Override
+    public List<Candlestick> buildCandlesticksFromQuotes(List<Quote> quotes) {
+        if (quotes == null || quotes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Sort quotes by createdTime
+        List<Quote> sortedQuotes = new ArrayList<>(quotes);
+        sortedQuotes.sort(Comparator.comparing(Quote::getCreatedTime));
+
+        // Group quotes by minute (truncated to minute)
+        Map<LocalDateTime, Candlestick> candlesByMinute = new LinkedHashMap<>();
+
+        for (Quote quote : sortedQuotes) {
+            Instant createdTime = quote.getCreatedTime();
+            LocalDateTime quoteTime = LocalDateTime.ofInstant(createdTime, ZoneId.systemDefault());
+            LocalDateTime minuteKey = quoteTime.truncatedTo(ChronoUnit.MINUTES);
+            double price = quote.getPrice();
+
+            Candlestick candle = candlesByMinute.get(minuteKey);
+
+            if (candle == null) {
+                // First quote in this minute - create new candlestick
+                candle = new Candlestick();
+                candle.setOpenTimestamp(minuteKey);
+                candle.setOpenPrice(price);
+                candle.setHighPrice(price);
+                candle.setLowPrice(price);
+                candle.setClosePrice(price);
+                candle.setCloseTimestamp(quoteTime);
+                candlesByMinute.put(minuteKey, candle);
+            } else {
+                // Update existing candlestick
+                candle.setHighPrice(Math.max(candle.getHighPrice(), price));
+                candle.setLowPrice(Math.min(candle.getLowPrice(), price));
+                candle.setClosePrice(price);
+                candle.setCloseTimestamp(quoteTime);
+            }
+        }
+
+        return new ArrayList<>(candlesByMinute.values());
+    }
+
+  @Override
+  public List<Candlestick> getCandlesticks(String isin, int minutes) {
+    List<Quote> quoteList = quoteService.getByIsinAndMinutes(isin, minutes);
+    return buildCandlesticksFromQuotes(quoteList);
   }
 }

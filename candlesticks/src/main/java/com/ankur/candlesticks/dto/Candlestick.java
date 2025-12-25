@@ -23,7 +23,6 @@ public class Candlestick {
     this.lowPrice = lowPrice;
     this.closePrice = closePrice;
     this.closeTimestamp = closeTimestamp;
-
   }
 
 

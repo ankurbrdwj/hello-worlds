@@ -1,9 +1,10 @@
 package com.ankur.candlesticks.controller;
 
+import com.ankur.candlesticks.dto.Candlestick;
 import com.ankur.candlesticks.entity.Instrument;
 import com.ankur.candlesticks.entity.Quote;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+
+import com.ankur.candlesticks.service.CandlestickService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +21,7 @@ public class CandlestickController {
 
   private final InstrumentService instrumentService;
   private final QuoteService quoteService;
+  private final CandlestickService candlestickService;
 
   // Fetch instruments from the last 'n' minutes provided by the user
   @GetMapping("/instruments")
@@ -33,10 +35,10 @@ public class CandlestickController {
     return quoteService.getQuotesFromLastMinutes(minutes);
   }
   @GetMapping("/candlesticks")
-  public List<Quote> getQuotesForIsin(@RequestParam String isin, @RequestParam(defaultValue = "30") int minutes) {
+  public List<Candlestick> getQuotesForIsin(@RequestParam String isin, @RequestParam(defaultValue = "30") int minutes) {
 
 
     // Fetch quotes from the service for the given time period
-    return quoteService.getByIsinAndMinutes(isin,minutes);
+    return candlestickService.getCandlesticks(isin, minutes);
   }
 }

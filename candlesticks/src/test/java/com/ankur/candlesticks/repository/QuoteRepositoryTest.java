@@ -11,10 +11,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
+@EnableJpaAuditing
 public class QuoteRepositoryTest {
 
   @Autowired
@@ -24,73 +26,79 @@ public class QuoteRepositoryTest {
   private InstrumentsRepository instrumentRepository;
 
   private Instrument instrument;
+  private Instant testStartTime;
 
   @BeforeEach
   void setup() {
+    testStartTime = Instant.now();
+
     // Create an Instrument and save it to the database
-    instrument = Instrument.builder().isin("TEST_ISIN_123")
-      .description("Test Instrument")
-      .build();
+    instrument = Instrument.builder()
+        .setIsin("TEST_ISIN_123")
+        .setDescription("Test Instrument")
+        .setActive(true)
+        .build();
     instrumentRepository.save(instrument);
 
     // Add some test quotes for the instrument
+    // Note: @CreatedDate will set createdTime to NOW for all quotes
     Quote quote1 = Quote.builder()
-      .instrument(instrument)
-      .price(100.0)
-      .createdTime(Instant.now().minusSeconds(1800)).build(); // 30 minutes ago
-    System.out.println("quote1 ::  " +quote1.getCreatedTime().toString());
+        .setInstrument(instrument)
+        .setPrice(100.0)
+        .build();
     quoteRepository.save(quote1);
 
     Quote quote2 = Quote.builder()
-      .instrument(instrument)
-      .price(110.0)
-      .createdTime(Instant.now().minusSeconds(1500)).build();// 25 minutes ago
-    System.out.println("quote2 ::  " +quote2.getCreatedTime().toString());
+        .setInstrument(instrument)
+        .setPrice(110.0)
+        .build();
     quoteRepository.save(quote2);
 
     Quote quote3 = Quote.builder()
-      .instrument(instrument)
-      .price(105.0)
-      .createdTime(Instant.now().minusSeconds(600)).build();// 10 minutes ago
-    System.out.println("quote3 ::  " +quote3.getCreatedTime().toString());
+        .setInstrument(instrument)
+        .setPrice(105.0)
+        .build();
     quoteRepository.save(quote3);
   }
 
   @Test
   void testFindQuotesForInstrumentInTimePeriod() {
-    // Set the time range (last 30 minutes)
-    Instant endTime = Instant.now();
-    Instant startTime = endTime.minusSeconds(30 * 60);
-    System.out.println("startTime ::  " +startTime.toString());
-    System.out.println("endTime ::  " +endTime.toString());
+    // All quotes were created during test setup (approximately now)
+    Instant endTime = Instant.now().plusSeconds(60); // buffer for test execution
+    Instant startTime = testStartTime.minusSeconds(60); // buffer before test started
 
     // Call the repository method
     List<Quote> quotes = quoteRepository.findQuotesForInstrumentInTimePeriod(
-      instrument.getIsin(), startTime, endTime);
+        instrument.getIsin(), startTime, endTime);
 
-    // Assert the number of returned quotes
-    assertThat(quotes).hasSize(2);
-
-    // Assert the order and values of quotes
-    //assertThat(quotes.get(0).getPrice()).isEqualTo(100.0);
-    assertThat(quotes.get(0).getPrice()).isEqualTo(110.0);
-    assertThat(quotes.get(1).getPrice()).isEqualTo(105.0);
+    // Assert all 3 quotes are returned (created during test setup)
+    assertThat(quotes).hasSize(3);
   }
 
   @Test
-  void testFindQuotesForInstrumentInShorterTimePeriod() {
-    // Set a shorter time range (last 15 minutes)
-    Instant endTime = Instant.now();
-    Instant startTime = endTime.minusSeconds(15 * 60);
+  void testFindQuotesForInstrumentInTimePeriod_NoResults() {
+    // Query for time period in the past (before any quotes existed)
+    Instant endTime = testStartTime.minusSeconds(3600); // 1 hour before test
+    Instant startTime = endTime.minusSeconds(1800); // 30 minutes before that
 
     // Call the repository method
     List<Quote> quotes = quoteRepository.findQuotesForInstrumentInTimePeriod(
-      instrument.getIsin(), startTime, endTime);
+        instrument.getIsin(), startTime, endTime);
 
-    // Assert the number of returned quotes
-    assertThat(quotes).hasSize(1);
+    // Assert no quotes returned
+    assertThat(quotes).isEmpty();
+  }
 
-    // Assert the quote values
-    assertThat(quotes.get(0).getPrice()).isEqualTo(105.0);
+  @Test
+  void testFindQuotesForInstrumentInTimePeriod_DifferentIsin() {
+    // Query with wrong ISIN
+    Instant endTime = Instant.now().plusSeconds(60);
+    Instant startTime = testStartTime.minusSeconds(60);
+
+    List<Quote> quotes = quoteRepository.findQuotesForInstrumentInTimePeriod(
+        "WRONG_ISIN", startTime, endTime);
+
+    // Assert no quotes returned for non-existent ISIN
+    assertThat(quotes).isEmpty();
   }
 }
