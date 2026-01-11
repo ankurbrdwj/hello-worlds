@@ -47,7 +47,7 @@ import java.time.Duration;
  */
 @Configuration
 @EnableCaching
-public class periodCacheConfig {
+public class CacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -55,6 +55,16 @@ public class periodCacheConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // NOTE: Commented out default typing to avoid conflicts with HTTP serialization
+        // Trade-off: Single object caching may have LinkedHashMap deserialization issues
+        // Solution: Only cache collections (List), not single objects
+        //
+        // objectMapper.activateDefaultTyping(
+        //         objectMapper.getPolymorphicTypeValidator(),
+        //         ObjectMapper.DefaultTyping.NON_FINAL,
+        //         com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_ARRAY
+        // );
 
         // Default configuration for all caches
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()

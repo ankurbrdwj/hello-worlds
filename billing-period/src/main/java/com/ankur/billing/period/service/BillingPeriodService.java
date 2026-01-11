@@ -13,9 +13,11 @@ import java.util.List;
 @Service
 public class BillingPeriodService {
 
-    @Cacheable(value = "billingPeriods", key = "#date.toString()")
+    // NOTE: Caching disabled for single objects due to LinkedHashMap deserialization issue
+    // See CacheConfig.java for explanation. Only caching collections works reliably.
+    // @Cacheable(value = "billingPeriods", key = "#date.toString()")
     public BillingPeriod getPeriodForDate(LocalDate date) {
-        System.out.println("CACHE MISS! Computing period for date: " + date);
+        System.out.println("Computing period for date: " + date);
         int year = date.getYear();
         List<LocalDate> periodStarts = calculatePeriodStarts(year);
 
