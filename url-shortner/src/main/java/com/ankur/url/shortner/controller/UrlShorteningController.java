@@ -26,9 +26,9 @@ public class UrlShorteningController {
 
     /**
      * Create a shortened URL
-     * POST /api/urls
+     * POST /shorten
      */
-    @PostMapping("/{shortCode}")
+    @PostMapping("/shorten")
     public ResponseEntity<ShortenedUrlReponse> createShortUrl(
             @Valid @RequestBody CreateShortUrlRequest request) {
 
@@ -52,8 +52,8 @@ public class UrlShorteningController {
     public ResponseEntity<ResolveUrlResponse> getOriginalUrl(@PathVariable String shortCode) {
         String originalUrl = resolverService.resolveUrl(shortCode);
         ResolveUrlResponse response = new ResolveUrlResponse(
-                shortCode,
-                originalUrl
+                originalUrl,
+                shortCode
         );
         return ResponseEntity.ok(response);
     }
