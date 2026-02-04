@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candlestick Chart - Live View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #252525;
+            border-radius: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 12px;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            align-self: flex-end;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        button:active {
+            background-color: #2868a8;
+        }
+
+        button:disabled {
+            background-color: #3a3a3a;
+            cursor: not-allowed;
+        }
+
+        #chart {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px 15px;
+            background-color: #252525;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #b0b0b0;
+        }
+
+        .status.error {
+            background-color: #4a2525;
+            color: #ff6b6b;
+        }
+
+        .status.success {
+            background-color: #254a25;
+            color: #6bff6b;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            min-width: auto;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Candlestick Chart Viewer</h1>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="isin">ISIN:</label>
+                <select id="isin">
+                    <option value="">Select instrument...</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="minutes">Time Range (minutes):</label>
+                <input type="number" id="minutes" value="30" min="1" max="1440">
+            </div>
+
+            <div class="control-group auto-refresh">
+                <input type="checkbox" id="autoRefresh">
+                <label for="autoRefresh">Auto-refresh every 5s</label>
+            </div>
+
+            <button id="loadBtn">Load Chart</button>
+            <button id="refreshBtn">Refresh</button>
+        </div>
+
+        <div id="chart"></div>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script>
+        let chart;
+        let candlestickSeries;
+        let autoRefreshInterval;
+
+        // Initialize chart on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing...');
+            initializeChart();
+            loadInstruments();
+            setupEventListeners();
+        });
+
+        function initializeChart() {
+            console.log('=== INITIALIZING CHART ===');
+            const chartContainer = document.getElementById('chart');
+
+            // Check if LightweightCharts is loaded
+            if (typeof LightweightCharts === 'undefined') {
+                console.error('LightweightCharts library not loaded!');
+                updateStatus('Error: Chart library failed to load', 'error');
+                return;
+            }
+
+            console.log('LightweightCharts:', LightweightCharts);
+            console.log('Available in LightweightCharts:', Object.keys(LightweightCharts));
+
+            try {
+                chart = LightweightCharts.createChart(chartContainer, {
+                    width: chartContainer.clientWidth,
+                    height: 600,
+                    layout: {
+                        background: { color: '#1a1a1a' },
+                        textColor: '#d1d4dc',
+                    },
+                    grid: {
+                        vertLines: { color: '#2a2a2a' },
+                        horzLines: { color: '#2a2a2a' },
+                    },
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                    },
+                    rightPriceScale: {
+                        borderColor: '#3a3a3a',
+                    },
+                    timeScale: {
+                        borderColor: '#3a3a3a',
+                        timeVisible: true,
+                        secondsVisible: false,
+                    },
+                });
+
+                console.log('Chart created:', chart);
+                console.log('Chart type:', typeof chart);
+                console.log('Chart properties:', Object.keys(chart));
+                console.log('addCandlestickSeries type:', typeof chart.addCandlestickSeries);
+
+                if (typeof chart.addCandlestickSeries !== 'function') {
+                    console.error('addCandlestickSeries is not available!');
+                    console.log('Available methods on chart:', Object.getOwnPropertyNames(chart));
+                    updateStatus('Error: addCandlestickSeries not found', 'error');
+                    return;
+                }
+
+                candlestickSeries = chart.addCandlestickSeries({
+                    upColor: '#26a69a',
+                    downColor: '#ef5350',
+                    borderVisible: false,
+                    wickUpColor: '#26a69a',
+                    wickDownColor: '#ef5350',
+                });
+
+                console.log('Candlestick series created successfully!');
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    chart.applyOptions({ width: chartContainer.clientWidth });
+                });
+
+            } catch (error) {
+                console.error('Error in initializeChart:', error);
+                updateStatus('Error initializing chart: ' + error.message, 'error');
+            }
+        }
+
+        async function loadInstruments() {
+            try {
+                console.log('Fetching instruments...');
+                const response = await fetch('/instruments?minutes=1440');
+                console.log('Response status:', response.status);
+
+                if (!response.ok) throw new Error('Failed to fetch instruments: ' + response.status);
+
+                const instruments = await response.json();
+                console.log('Loaded instruments:', instruments);
+
+                const select = document.getElementById('isin');
+
+                // Clear existing options except the first one
+                select.innerHTML = '<option value="">Select instrument...</option>';
+
+                instruments.forEach(instrument => {
+                    const option = document.createElement('option');
+                    option.value = instrument.isin;
+                    option.textContent = `${instrument.isin} - ${instrument.description || 'No description'}`;
+                    select.appendChild(option);
+                });
+
+                updateStatus(`Loaded ${instruments.length} instruments`, 'success');
+            } catch (error) {
+                console.error('Error loading instruments:', error);
+                updateStatus('Error loading instruments: ' + error.message, 'error');
+            }
+        }
+
+        async function loadCandlesticks() {
+            const isin = document.getElementById('isin').value;
+            const minutes = document.getElementById('minutes').value;
+
+            if (!isin) {
+                updateStatus('Please select an ISIN', 'error');
+                return;
+            }
+
+            const loadBtn = document.getElementById('loadBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            loadBtn.disabled = true;
+            refreshBtn.disabled = true;
+
+            try {
+                updateStatus('Loading candlesticks...', '');
+
+                const response = await fetch(`/candlesticks?isin=${encodeURIComponent(isin)}&minutes=${minutes}`);
+                if (!response.ok) throw new Error('Failed to fetch candlesticks');
+
+                const candlesticks = await response.json();
+
+                if (candlesticks.length === 0) {
+                    updateStatus('No candlestick data available for this instrument', 'error');
+                    candlestickSeries.setData([]);
+                    return;
+                }
+
+                // Transform data to Lightweight Charts format
+                const chartData = candlesticks.map(candle => ({
+                    time: convertToTimestamp(candle.openTimestamp),
+                    open: candle.openPrice,
+                    high: candle.highPrice,
+                    low: candle.lowPrice,
+                    close: candle.closePrice
+                }));
+
+                // Sort by time
+                chartData.sort((a, b) => a.time - b.time);
+
+                candlestickSeries.setData(chartData);
+
+                // Fit the chart to the data
+                chart.timeScale().fitContent();
+
+                updateStatus(`Loaded ${candlesticks.length} candlesticks for ${isin}`, 'success');
+
+            } catch (error) {
+                console.error('Error loading candlesticks:', error);
+                updateStatus('Error loading candlesticks: ' + error.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        function convertToTimestamp(dateString) {
+            // Convert ISO string to Unix timestamp in seconds
+            const date = new Date(dateString);
+            return Math.floor(date.getTime() / 1000);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('loadBtn').addEventListener('click', loadCandlesticks);
+            document.getElementById('refreshBtn').addEventListener('click', loadCandlesticks);
+
+            document.getElementById('autoRefresh').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    startAutoRefresh();
+                } else {
+                    stopAutoRefresh();
+                }
+            });
+
+            document.getElementById('isin').addEventListener('change', () => {
+                if (document.getElementById('isin').value) {
+                    loadCandlesticks();
+                }
+            });
+        }
+
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            autoRefreshInterval = setInterval(() => {
+                if (document.getElementById('isin').value) {
+                    loadCandlesticks();
+                }
+            }, 5000);
+            updateStatus('Auto-refresh enabled (every 5 seconds)', 'success');
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status' + (type ? ' ' + type : '');
+        }
+    </script>
+</body>
+</html>

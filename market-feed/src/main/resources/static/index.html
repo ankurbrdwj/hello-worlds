@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Feed - Real-Time Stock Prices</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .connection-status {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-item {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background-color: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50;
+        }
+
+        .status-disconnected {
+            background-color: #f44336;
+        }
+
+        .instruments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instrument-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instrument-card.removed {
+            animation: slideOut 0.3s ease;
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        .instrument-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .instrument-symbol {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .instrument-name {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .instrument-price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .price-up {
+            color: #4CAF50;
+            animation: priceFlash 0.5s ease;
+        }
+
+        .price-down {
+            color: #f44336;
+            animation: priceFlash 0.5s ease;
+        }
+
+        @keyframes priceFlash {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stats h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: inline-block;
+            margin: 0 20px;
+            font-size: 1.2em;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Real-Time Market Feed</h1>
+
+        <div class="connection-status">
+            <div class="status-item">
+                <span class="status-indicator" id="instrumentsStatus"></span>
+                <span>Instruments: <span id="instrumentsText">Disconnected</span></span>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="quotesStatus"></span>
+                <span>Quotes: <span id="quotesText">Disconnected</span></span>
+            </div>
+        </div>
+
+        <div class="instruments-grid" id="instrumentsGrid"></div>
+
+        <div class="stats">
+            <h2>Statistics</h2>
+            <div class="stat-item">
+                Active Instruments: <span class="stat-value" id="activeInstruments">0</span>
+            </div>
+            <div class="stat-item">
+                Total Updates: <span class="stat-value" id="totalUpdates">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const instruments = new Map();
+        const prices = new Map();
+        let totalUpdates = 0;
+
+        // WebSocket connections
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = window.location.host;
+
+        const instrumentsWs = new WebSocket(`${wsProtocol}//${wsHost}/instruments`);
+        const quotesWs = new WebSocket(`${wsProtocol}//${wsHost}/quotes`);
+
+        // Status indicators
+        const instrumentsStatus = document.getElementById('instrumentsStatus');
+        const instrumentsText = document.getElementById('instrumentsText');
+        const quotesStatus = document.getElementById('quotesStatus');
+        const quotesText = document.getElementById('quotesText');
+
+        // Instruments WebSocket
+        instrumentsWs.onopen = () => {
+            console.log('Instruments WebSocket connected');
+            instrumentsStatus.classList.add('status-connected');
+            instrumentsStatus.classList.remove('status-disconnected');
+            instrumentsText.textContent = 'Connected';
+        };
+
+        instrumentsWs.onclose = () => {
+            console.log('Instruments WebSocket disconnected');
+            instrumentsStatus.classList.remove('status-connected');
+            instrumentsStatus.classList.add('status-disconnected');
+            instrumentsText.textContent = 'Disconnected';
+        };
+
+        instrumentsWs.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleInstrumentMessage(message);
+        };
+
+        // Quotes WebSocket
+        quotesWs.onopen = () => {
+            console.log('Quotes WebSocket connected');
+            quotesStatus.classList.add('status-connected');
+            quotesStatus.classList.remove('status-disconnected');
+            quotesText.textContent = 'Connected';
+        };
+
+        quotesWs.onclose = () => {
+            console.log('Quotes WebSocket disconnected');
+            quotesStatus.classList.remove('status-connected');
+            quotesStatus.classList.add('status-disconnected');
+            quotesText.textContent = 'Disconnected';
+        };
+
+        quotesWs.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleQuoteMessage(message);
+        };
+
+        function handleInstrumentMessage(message) {
+            const { type, data } = message;
+
+            if (type === 'ADD') {
+                addInstrument(data);
+            } else if (type === 'DELETE') {
+                removeInstrument(data);
+            }
+        }
+
+        function handleQuoteMessage(message) {
+            const { data } = message;
+            updatePrice(data.isin, data.price);
+            totalUpdates++;
+            document.getElementById('totalUpdates').textContent = totalUpdates;
+        }
+
+        function addInstrument(instrument) {
+            instruments.set(instrument.isin, instrument);
+            prices.set(instrument.isin, null);
+
+            const grid = document.getElementById('instrumentsGrid');
+            const card = document.createElement('div');
+            card.className = 'instrument-card';
+            card.id = `instrument-${instrument.isin}`;
+            card.innerHTML = `
+                <div class="instrument-symbol">${instrument.isin}</div>
+                <div class="instrument-name">${instrument.description}</div>
+                <div class="instrument-price" id="price-${instrument.isin}">--</div>
+            `;
+
+            grid.appendChild(card);
+            updateStats();
+        }
+
+        function removeInstrument(instrument) {
+            const card = document.getElementById(`instrument-${instrument.isin}`);
+            if (card) {
+                card.classList.add('removed');
+                setTimeout(() => {
+                    card.remove();
+                    instruments.delete(instrument.isin);
+                    prices.delete(instrument.isin);
+                    updateStats();
+                }, 300);
+            }
+        }
+
+        function updatePrice(isin, newPrice) {
+            const priceElement = document.getElementById(`price-${isin}`);
+            if (!priceElement) return;
+
+            const oldPrice = prices.get(isin);
+            prices.set(isin, newPrice);
+
+            priceElement.textContent = `$${parseFloat(newPrice).toFixed(2)}`;
+
+            // Add flash animation based on price change
+            priceElement.classList.remove('price-up', 'price-down');
+
+            if (oldPrice !== null) {
+                if (newPrice > oldPrice) {
+                    priceElement.classList.add('price-up');
+                } else if (newPrice < oldPrice) {
+                    priceElement.classList.add('price-down');
+                }
+
+                setTimeout(() => {
+                    priceElement.classList.remove('price-up', 'price-down');
+                }, 500);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('activeInstruments').textContent = instruments.size;
+        }
+
+        // Initial stats update
+        updateStats();
+    </script>
+</body>
+</html>
