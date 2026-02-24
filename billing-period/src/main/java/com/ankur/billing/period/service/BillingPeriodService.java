@@ -22,16 +22,11 @@ public class BillingPeriodService {
         List<LocalDate> periodStarts = calculatePeriodStarts(year);
 
         for (int i = 0; i < periodStarts.size(); i++) {
-            LocalDate periodStart = periodStarts.get(i);
-            LocalDate periodEnd = (i < periodStarts.size() - 1)
-                ? periodStarts.get(i + 1).minusDays(1)
-                : LocalDate.of(year, 12, 31);
-
-            if (!date.isBefore(periodStart) && !date.isAfter(periodEnd)) {
-                return new BillingPeriod(i + 1, periodStart, periodEnd);
+            BillingPeriod period = createBillingPeriod(periodStarts, i, year);
+            if (!date.isBefore(period.getStartDate()) && !date.isAfter(period.getEndDate())) {
+                return period;
             }
         }
-
         return null;
     }
 
@@ -42,15 +37,18 @@ public class BillingPeriodService {
         List<BillingPeriod> periods = new ArrayList<>();
 
         for (int i = 0; i < periodStarts.size(); i++) {
-            LocalDate periodStart = periodStarts.get(i);
-            LocalDate periodEnd = (i < periodStarts.size() - 1)
-                ? periodStarts.get(i + 1).minusDays(1)
-                : LocalDate.of(year, 12, 31);
-
-            periods.add(new BillingPeriod(i + 1, periodStart, periodEnd));
+            periods.add(createBillingPeriod(periodStarts, i, year));
         }
-
         return periods;
+    }
+
+    private BillingPeriod createBillingPeriod(List<LocalDate> periodStarts, int index, int year) {
+        LocalDate periodStart = periodStarts.get(index);
+        LocalDate periodEnd = (index < periodStarts.size() - 1)
+            ? periodStarts.get(index + 1).minusDays(1)
+            : LocalDate.of(year, 12, 31);
+
+        return new BillingPeriod(index + 1, periodStart, periodEnd);
     }
 
     private List<LocalDate> calculatePeriodStarts(int year) {
