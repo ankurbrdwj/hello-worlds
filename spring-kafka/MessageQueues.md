@@ -1,0 +1,183 @@
+00:00:00
+Hey everyone, welcome back to the channel. Uh, for those of you who may be new here, I'm Evan. I'm a former metastaf engineer and I'm the current co-founder of hello.com. If you're currently preparing for software interviews, and you probably are if you landed here, then head over to Hello Interview. We have just about everything that you could possibly need, the overwhelming majority of which is totally free. Uh, in this video though, we're going to be covering message cues
+
+00:00:21
+and specifically, as always, in the context of system design interviews. And so, we're going to start with a motivating example that'll show you why QES exist in the first place. And then we'll talk all about what a message cube actually is, how it works under the hood, when you should use one, and then finally, we'll get into those deep dives that interviewers love to probe into things like scaling, back pressure, ordering, durability, all of that good stuff. So, without further ado, let's
+
+00:00:45
+get after it. Let's start things off with a little motivating example. I want you to imagine that you're building a photo sharing app like Instagram. So, the user uploads a photo to your server and then it needs to do a bunch of stuff with that photo. And so, for example, you may need to resize it into multiple different resolutions. You may need to apply filters, maybe run some kind of content moderation checks in the background to make sure that it's appropriate, it's not nudity, those
+
+00:01:09
+sorts of things. And each of those operations takes a couple of seconds each. In the simplest possible architecture that you could design, what might happen here is that the client uploads the photo to your server and then your server does all of that work synchronously. That single server handles all of that work. Resizing the images, applying the filters, running the moderation checks, and then once all of that's done, and only once all of that's done, it returns the response back to the client with the success
+
+00:01:35
+message. This this works kind of uh but it has some real limitations. The the first is latency. The user hits upload and then they just stare at a spinner or whatever you put on the client while all of that processing is happening and they're just waiting. Nobody wants to have to wait six seconds just to get that confirmation that they're they're they uploaded their photo, right? The second problem is around how fragile this is. What happens if the filter service maybe crashes halfway through all of that
+
+00:02:03
+processing? Well, the whole upload now fails. Now the user ends up getting an error with a message maybe to retry and that resizing work that we already did is now totally lost too and we have to start from scratch. And then the third one is is a big one. How do you manage really bursty traffic? So, imagine that, for example, your app gets featured in the app store. Super cool. Um, but now your uploads spike from what was maybe 50 a second to 5,000 or 50,000 or 500,000 a second. And your servers, they
+
+00:02:34
+can't handle more than maybe 200 per second. And so those other 4,800, right, they're just timing out or they're failing or the user gets an error. your system is basically falling over under the load because it can't handle this new huge throughput. So with all of that in mind, let me show you how we can solve each of these problems by introducing a message cue. Instead of processing that photo immediately, what if when that upload comes in, your server just saves the file and writes a message to a queue.
+
+00:03:06
+The message is something simple like, "Hey, photo 456 needs processing." And then our server can immediately respond back to the client saying that it's done. The upload's complete from the client's perspective. And we can show them maybe the single resolution photo just to them while the rest is processing in the background. Because at the other end of the queue, you have a pool of workers, maybe a worker servers, right? Where each worker is pulling one of those messages at a time off of the
+
+00:03:32
+queue and processing it. So if three photos get uploaded around the same time, each one gets picked up maybe by a different worker on the other end of that queue called consumers. And they'll all be able to process in parallel. So we can look at what happens in this case to our three problems. Now uploads are fast because your server is just saving the file and dropping it onto a message queue. It's not doing the expensive processing. Failures are isolated because if a worker crashes while
+
+00:03:56
+processing a single photo, that message just gets redelivered to another worker and it picks up where the other one left off. And then on those big traffic spikes, it just means that the queue gets a little bit deeper, right? There's more items in the queue. And so the messages sit there potentially waiting to be processed. So at worst, there's a delay, but none are dropped or aired out. All right, now let's formalize what we just saw. What actually is a message Q? Well, it's pretty much exactly what
+
+00:04:21
+it sounds like. A message Q is just a buffer, a queue that sits between a producer and a consumer. The producer is the thing or the server, the service that creates the work. In our example, this was that server handling the upload from the client. And the consumer is the thing that actually does the work. In our case, this was that pool of workers that process the photos. The way it works is really straightforward. The producer sends a message to the queue and then totally forgets about it. It
+
+00:04:48
+doesn't care when or even if the message gets press processed at all. That's not its responsibility. It just fires and moves on. On the other end, the consumer pulls messages off the queue and processes them at its own pace. So the Q's whole job is just to hold on to these messages until somebody is ready to deal with them. It's just a buffer in between the two services. The key property here is called decoupling. The producer and the consumer don't know about each other. They don't need to.
+
+00:05:12
+And so this allows you to scale them independently and swap one or the other without affecting each other directly. You need more consumers, fine. You can add more servers there while leaving the producers where they were. you need more producers, you can scale those up while leaving, you know, the one or two consumers that you had. Um, to wrap up this this kind of intro on what is a message cue, uh, and I'll al albe it kind of silly analogy that I remember from school, which may help you, and
+
+00:05:38
+I've seen this click for candidates, is to think of it like a kitchen. The waiter takes your order and then puts it on the ticket rail. The cook grabs the ticket off of the rail when they're ready, and the waiter doesn't just stand there waiting the waiting for the cook to make your food. instead they go and they serve other tables, right? And so the ticket rail decouples the front of the house from the back of the house exactly the same way a message Q does for our producers and our consumers,
+
+00:06:01
+right? Pretty straightforward example. Okay, now that we know what a message Q is, let's talk a little bit about how it actually works under the hood. Uh there's a few mechanisms that you need to understand and each one solves real problems. So let's start off with with acknowledgements. Let me give you a scenario. A worker pulls a message off of the queue and it starts processing the photo. Halfway through the worker crashes for whatever reason. It runs out of memory. Anything can happen here. And
+
+00:06:26
+so what would happen to that message? Well, if the queue just deleted the message the moment the worker grabbed it, then that photo is now gone and it will never get processed. That user that user's upload is basically just lost forever. Uh which would clearly be be really bad. This is what acknowledgements solve. When a consumer pulls the message off of the queue, the queue doesn't delete it right away. Instead, the consumer has to explicitly send an acknowledgement or an act back to the queue saying, "Hey, I'm done with
+
+00:06:54
+this one. You can go ahead and actually delete it now." So, if a consumer crashes before sending that act, the que assumes it wasn't processed and it ends up just being redelivered. That message ends up being redelivered to another consumer so that nothing was actually lost. Great. So, the the Q holds on to messages until consumers act them, right? acknowledge them. Um, but think about what this actually means, and you may have already thought this or recognized this. While worker A is busy
+
+00:07:20
+processing a message and it hasn't acted yet because it's in its 4 seconds of doing all of that processing, then that message is technically still in the queue. So, what's stopping worker B from grabbing it, too? And then you'd have two workers doing the exact same work, which is wasteful at best, and in some cases maybe even even dangerous or hurts the state of your system. Now, different queuing systems solve this exact problem different ways. In SQS, which is Amazon's native message queue, when a
+
+00:07:47
+consumer picks up a message, it becomes invisible to all other consumers for a configurable window, like say 30 seconds. And so, if the consumer finishes and it acts within that window, then all good, the message was removed. If it doesn't, the message becomes visible again automatically and another consumer can retry. So, it's basically like a 30-se secondond window or a configurable time period. um where we we don't let consumers um double process a message. CFKA on the other hand, they
+
+00:08:15
+take a pretty different approach though. They just assign each partition, we'll talk about what those are in a second, to exactly one consumer in a group, so that there's no even competition in the first place. There's only one consumer ever reading from any given logical queue, if you will. And then Rabbit MQ, another popular message Q that we'll talk about at the end, they use channel level prefetch limits and act timeouts to manage this. So, we won't get into all those details, but what's good for
+
+00:08:40
+you to know is just that um all of these cues have a way to prevent duplicate processing. And whatever your queue of choice is, it might be worth looking up how exactly they do that. So, while the implementations differ, the concept is always the same. Every queuing system just needs a way to make sure that a message is only being actively processed by one consumer at a time. Okay. But even with axe and that duplicate uh message prevention, there's still a tricky edge case that I want to make you
+
+00:09:08
+guys aware of. So what if the worker processes the message successfully, but then crashes right before that moment, it sends the acknowledgement. It sends the act. Now the queue thinks that it was never processed, so it redelivers it to another consumer. And that same photo gets processed twice. And maybe in our case, when you're just resizing photos and running content moderation, that doesn't matter at all. Doing that twice has has no bad effect. But what if the message was something like, "Charge Evan
+
+00:09:34
+$50 for a banking application or something." Um, that duplicate message now just resulted in me being charged $100. And and that's obviously not cool. Um, this is the problem that's referred to as we talk about message cues as delivery guarantees. And there are three that you should know about and that your interviewer might ask about. The first and by far the most common delivery guarantee is called at least once delivery. This just means that the Q guarantees that every single message
+
+00:10:04
+will be delivered at least one time, but it might be delivered more than once. The implication of this is that your consumers now need to be what's called item potent. Item potent just means that processing the same message twice will produce the exact same result. Let me give you an example. If your message says set user 123's profile photo to photo 5, then running that twice is fine. You get the exact same result. The first time you ran it, it set it to photo five. The second time you run it,
+
+00:10:34
+it just set it to photo five again, which it already was, so no big deal. But like we saw with that earlier message or with the banking example, if your message is something like increment user 123's post count by one, then running that twice is a problem. You've now obviously incremented their post count by two. And so in practice, you design your operations to be naturally item potent like in a photo example or you check whether the action has already be been completed before doing it again.
+
+00:11:02
+And so if we if we take that example of increment user 123's post count by one, the message or the work would actually be uh update user 123's post count to 54 where 54 was what it was before plus one. Right? That way running it twice the outcome is always still 54. Um, now this at least once delivery with item potent consumers. This is almost always the right answer both in production and in your interview. So if your interviewer asks what you're going to use, it's almost always the right answer
+
+00:11:32
+to say I'm going to have at least once uh delivery guarantees and I'm going to make sure that my consumers are item and potent. The second delivery guarantee is what's called at most once. And this is basically just fire and forget. So a consumer takes a message off of the queue, we immediately delete it off the queue at that moment. if something goes wrong, you know, at most one guy processed it. Uh, at worst, nobody processed it. And so, you really only want to use this for things like
+
+00:11:56
+analytics events or metrics where losing a few data points is totally acceptable. You have to be able to accept the loss if you use at most once. And then the third one is the holy grail. It's exactly once. Uh, this is that every message is processed exactly one time as it says, right? Uh the reality is that true exactly once delivery is extremely hard to achieve in distributed systems. CFKA supports a form of it for specific patterns within its own ecosystem. But it comes with real trade-offs and
+
+00:12:26
+limitations. And so my honest advice to you is don't promise exactly once in your interview unless you can explain the mechanism and defend it. At least once with those item potent consumers is the safer and frankly the more practical answer and what is almost always used in production. Now that we understand a little bit about how Q's work and what goes on under the hood, the next question is when should you actually reach for one? Well, there's four signals that you should end up looking
+
+00:12:51
+for that may lead you to introduce a queue in your interview. And these are very similar to the motivating example that we started with. The first one is that async work. And so this is when a user doesn't need an immediate result like sending an email, generating a report, processing uploads, all those things that we talked about. Um the litmus test is really simple. Ask yourself, does the user need the result of this operation right now or can they wait a little bit? If the answer is no, then it's a great candidate to put it in
+
+00:13:18
+a queue and have a worker process it asynchronously. The second is the bursty traffic. Like we saw in our example, you need to absorb spikes in traffic without dropping any requests. And so the queue is there to kind of smooth out the load by acting as a buffer and just accumulating a backlog of work that the consumers can get to, you know, when they have time or they have resources. Third is decoupling. This is your producer and consumer might have completely different scaling or hardware needs. Going back to our image
+
+00:13:46
+processing example, the upload services are super lightweight. They just accept the file, drop it into a message queue, but the workers doing the actual processing might need GPUs or beefy machines with lots of memory. And so with a queue between them, you can scale and provision each side independently. You're not forced to run expensive GPU instances just to handle uploads. This can make it more costefficient. And then the fourth one is reliability. When you just can't afford to lose work.
+
+00:14:14
+So if a downstream service is temporarily unavailable, the queue holds on to that message until it comes back online. And you make sure that you never lost anything. One thing that I do want to call out just really quickly because I see it in quite a few interviews, especially with junior and mid-level candidates, and it's be careful introducing a queue into a synchronous workload. It just doesn't belong there. So, if you have strong latency requirements in your non-functional requirements, like sub
+
+00:14:39
+500 millisecond response times to get an answer, by adding a queue, you've nearly guaranteed that you're going to break that constraint. Not only do you have a bunch of complexity on figuring out how to get that message back to the clients in the first place, but you've broken that latency constraint almost entirely by the nature of the way that these systems work. So again, cues are for that work that you can afford to do later, even if later is a few seconds from now. Okay, now let's get into some of those
+
+00:15:04
+deep dives. This is everybody's favorite part, right? The things that the interviewers really love to dig into once you introduce a queue into your system. So, it's really important that you're prepared for these questions, right? You just drew a message queue on the whiteboard. Here's what the interviewer might come at you with. Okay, so the first one's about scaling. They might say, "How does your queue handle the increased throughput or handle increasing throughput?" And what
+
+00:15:26
+you need to recognize here is that a single queue can only handle so much. When you need more, you do what's called partition. And partitioning just means splitting the queue into multiple independent sequences or like kind of sub cues of messages. Different workers can then process different partitions in parallel so that your throughput scales horizontally with the number of partitions. So by splitting into multiple cues, I'm putting that in quotes just because we're kind of uh conflating terminology here, but
+
+00:15:55
+multiple partitions, thus multiple logical cues, you can have multiple consumers consuming from the same time and thus increased the throughput. Um on the consumer side, you have what are called consumer groups. And a consumer group is just a pool of workers that divide those partitions amongst themselves. So if you have six partitions and three consumers in a group then each consumer can handle two partitions. You need to go faster. Well then you can add more consumers. Now the um importantly there is a ceiling here.
+
+00:16:25
+You can't have more consumers than you have partitions. If you have six partitions and six consumers adding a seventh doesn't help you here because there's no partition left for that new consumer to consume from. And hopefully that makes sense. Now, really importantly, the partition key, which is how you decide which message goes into which of these partitions, is really, really important. It's analogous to choosing a shard key or partition key in a database. And it matters for two main reasons. The first
+
+00:16:53
+is ordering. Messages with the same partition key always go to the same partition. And within a partition, ordering is guaranteed because they're sitting in that same subq. So imagine again that you're you're processing that bank transaction example we brought up. A user maybe deposits $100 and then withdraws $50. Clearly they should be able to do this. They put $100 into the bank. Now they want to take 50 out. If those two messages though ended up on different partitions, then the withdrawal could get processed
+
+00:17:25
+first and now it's rejected because at that moment maybe the account is empty, right? And so by using account ID as the partition key now both that both of those messages will land on the same partition because they're pertain to the same account. They'll be in the right order and they'll get processed in that right order where we add the 100 before we take away the 50. Right? And then the second one that's important about choosing your partition key is the even distribution. You want your partition
+
+00:17:52
+keys to spread work ac across these partitions pretty evenly. You can imagine that if you're building like a ride sharing application and your partition by city then now New York City is going to be excuse me New York City is going to be absolutely slammed while Boise sits there maybe getting nothing right and so that's what we call of course a hot partition and you'd probably want to partition by something more evenly distributed like a right ID so that you don't have that hot partition where you have one consumer
+
+00:18:22
+doing all the work where another consumer is just sitting there waiting because it's just watching Boise and there's nearly as many Uber rats, right? Um, there's of course a real trade-off here, though, and it's one that you might discuss in your interview, and it's that the key that gives you ordering might not always be the key that gives you the best distribution. And so, choosing the right partition key here is one of those decisions that's worth really spending some time in your
+
+00:18:44
+interview thinking through the consequences on those two factors, ordering and distribution. The the next deep dive that interviewers love to ask is what happens if your producers outpace your consumers. So if your producers are creating messages faster than your consumers can process them, the crew the the the queue just grows and grows and grows and grows and grows, right? And the queue doesn't solve a capacity problem. It just delays it. It's just buying you time. If you receive 300 messages per second, but
+
+00:19:13
+your consumers can only handle 200, that queue is growing at a 100 messages every single second and you'll never be able to catch up. Eventually, you'll run out of memory on that queue and things are going to go wrong. So, what do you do or what can you do? There's a couple things. The first of course is scaling. You can you can add autoscaling and a lot of the uh cloud providers provide autoscaling where you monitor the queue depth and when it starts to grow too much you spin up more consumers so that
+
+00:19:40
+you can consume quicker or you can even add additional partitions to the queue. But the second one and the one that interviewers are oftent times looking for is to apply what's called back pressure to the producers themselves. And so slow the producers down. Basically start either rejecting messages or maybe returning an error to the client saying, "Hey, we're a little overloaded right now. Please try again in a minute." And then the third and maybe the bare minimum is that you
+
+00:20:05
+should just be setting alerts of course on your QEP so that you know when something like this is happening. It's good to have the monitoring and the alerting here. Um be ready be ready to discuss this one. Interviewers want to know that you understand that a Q isn't just magic, right? It's a buffer, not a solution to insufficient capacity. Moving on. Uh, sometimes a message just fails to process. And so your interviewer might ask you, what happens when a message fails to process? Maybe
+
+00:20:31
+the image file is corrupted or the downstream service is temporarily unavailable. That's fine. It happens, right? So, think about our photo upload example. What if I just uploaded a corrupted photo? It will never succeed. No matter how many times you try, it will continue to fail. And this is a really common problem and it's what's called with message cues a poisoned message. Sounds maybe scarier than it is, but it's just a malformed or problematic message that crashes the consumer every single time and there's
+
+00:20:58
+no recovering from it. So without guard rails, it's going to retry forever. And meanwhile, everyone else is just stuck behind it waiting. It's just consuming all the resources of the given consumer indefinitely. To solve this, most queuing systems, they let you configure a max retry count. The message gets tried, tried, tried again, maybe five, six times. And if it still hasn't succeeded after five tries, instead of retrying forever, you shunt it and you put it to a dead letter Q or a DLQ. And a DLQ is just a separate
+
+00:21:30
+Q or sometimes even just a separate partition where failed messages go so that somebody can inspect them later and figure out what went wrong. Meanwhile, the main queue keeps moving. So if this is failing, don't put it back into the main queue. put it somewhere else where we can just wait and maybe an admin comes in later to see what's going on there and try to fix those, right? Or nowadays an AI model. Um, mentioning this proactively in your interview is great. It shows that you have a bunch of
+
+00:21:53
+seniority. It shows that, hey, I'm going to have a limit on retries. I'm going to add a dead letter Q here. Um, this shows that you can understand those those failure scenarios. Now, speaking about failure scenarios, what about the ultimate failure scenario? What happens if the Q goes down? Um, and this is a question about durability and fault tolerance, especially if that was in your non-functional requirements. It's something that you're going to want to talk about. And it's good to know that
+
+00:22:15
+modern message cues, at least some of them like CFKA, they persist messages to disk and they can replicate them across multiple brokers. It's what it's called in the CFKA ecosystem, but these are just different servers. So if one broker goes down, another replica has that data just like with read replicas with databases. Same concept. So in this way, no messages are lost. Uh, CFKA in particular is interesting here because it stores messages on disks with a configurable retention window. So you
+
+00:22:42
+could keep messages around for say a day, a week, even forever if you wanted to and you had the capacity. And what this means is that you actually can replay messages from the past too, which is a really powerful recovery scenario. Uh, if you need to reprocess data after kind of something went down, you have a new new version of a consumer. And so you can imagine that your consumers go down for a while, they're offline for an hour, your queue, your CFKA queue is just backing up. No big deal. Because
+
+00:23:07
+when your consumer comes back on, it can start to just take all of those things again. Even more so, if that consumer was broken and it processed things incorrectly, well, we can just put a new consumer in, tell that consumer, hey, reprocess back from an hour ago, even though the messages were consumed. Um, and we can kind of fix what we broke. Speaking of CFKA, let's maybe quickly go through what are the most common message Q technologies. You certainly don't need to know all of these for your interview.
+
+00:23:34
+Um, but you should have at least one that you're comfortable talking about. If you don't have a default already, choose CFKA. It's kind of like the interviewing industry standard. Um, but let me walk you through a couple of them. Of course, starting with CFKA. CFKA is probably the most widely used and it's the one that I said I'd recommend. Um, it's a distributed streaming platform that can act as both a message cue and a stream processing system. So, it's built for really high
+
+00:23:58
+throughput. It's durable because of what we talked about. It writes messages to disks. And then it scales via partitions. Right? When we're talking about partitions, that's how CFKA works. It also supports those consumer groups. But one thing that makes CFKA a little different from a traditional queue is that messages aren't removed directly after they're consumed. So this was that example where you want to replay messages in case something some code in the consumer changed, right? In CFKA,
+
+00:24:24
+they stick around for those retention periods. So multiple consumer groups can read from the same data independently and you can replay messages if you need to. Like I said, um the second one I'm going to call out, and we have this in our written breakdowns quite a few times, is SQS. This is Amazon simple Q service. It's the AWS hosted ecosystem version of a message Q. Um it's simple, it's fully managed, there's no infrastructure you need to worry about. It comes basically in two flavors. A standard Q which gives
+
+00:24:52
+you the best effort ordering and really high throughput or FIFO cues which give you strict ordering but at a lower throughput. So SQS is a great choice when you want something really straightforward, you don't need more advanced features and your interviewer is cool with you pulling uh hosted solutions from cloud providers. The last one that that I'll mention is Rabbit MQ. And RabbitMQ is a more traditional message broker and it supports complex routing patterns through what it calls exchanges and
+
+00:25:19
+bindings. Obviously, I'm not going to have time to get into that here, but it's all the same underlying con uh concepts. It's maybe less common in system design interviews if I'm going to be honest with you. I hear it less, but it might be worth knowing that it exists uh especially in cases where you need some sophisticated message routing logic. So, to wrap things up in this section, if you don't already have a go-to, pick CFKA. It's the most versatile. If you want just hyper
+
+00:25:41
+simplicity in the AWS ecosystems around, SQS is great. It has that visibility timeout thing that we had mentioned earlier. Uh it has the option for ordering guarantees or looser guarantees but higher latency. All right, there you have it folks. Um hopefully you found this useful. Just a really quick recap. Message cues decouple your producers from your consumer. They buffer bursty traffic so nothing gets dropped. They distribute work across pools of workers. Um, you should know when to use them, know the
+
+00:26:09
+pitfalls, be specific and detailed when you bring things up. Um, any questions, anything that you think I got wrong, go ahead and please drop those in the comments. I respond to as many of those as I can. Uh, you'll have the Excal drawings that I use in this video down in the description as well. So, go ahead and check that out. You'll also have my LinkedIn. Connect with me, send me a message. Again, I respond to as many of those as I can get to as well. I love hearing from you all, especially if you
+
+00:26:33
+have a success story to share from your interviews. I'd love to celebrate with you. Uh most importantly, good luck with the upcoming interviews. You guys are going to do great. You're going to nail it. You're putting in the work. Uh and I'll see you soon.
+
