@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "Price Alert - Users API",
+    "_postman_id": "price-alert-users-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9095"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create User",
+      "item": [
+        {
+          "name": "Create User - Happy Path",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@example.com\",\n  \"name\": \"Alice Smith\",\n  \"phone\": \"+1234567890\",\n  \"notificationChannel\": \"EMAIL\",\n  \"timezone\": \"America/New_York\",\n  \"maxAlerts\": 10\n}"
+            }
+          }
+        },
+        {
+          "name": "Create User - SMS Channel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"bob@example.com\",\n  \"name\": \"Bob Jones\",\n  \"phone\": \"+9876543210\",\n  \"notificationChannel\": \"SMS\",\n  \"timezone\": \"Europe/London\",\n  \"maxAlerts\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Create User - Minimal (email + name only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"minimal@example.com\",\n  \"name\": \"Minimal User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create User - Duplicate Email (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@example.com\",\n  \"name\": \"Alice Duplicate\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create User (Result Pattern)",
+      "item": [
+        {
+          "name": "Result - Happy Path",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/result", "host": ["{{baseUrl}}"], "path": ["api", "users", "result"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carol@example.com\",\n  \"name\": \"Carol White\",\n  \"phone\": \"+1122334455\",\n  \"notificationChannel\": \"PUSH\",\n  \"timezone\": \"Asia/Tokyo\",\n  \"maxAlerts\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "Result - Blank Email → ValidationError (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/result", "host": ["{{baseUrl}}"], "path": ["api", "users", "result"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"\",\n  \"name\": \"No Email\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Result - Duplicate Email → DuplicateEmail (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/result", "host": ["{{baseUrl}}"], "path": ["api", "users", "result"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carol@example.com\",\n  \"name\": \"Carol Duplicate\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Result - Null Email → ValidationError (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/users/result", "host": ["{{baseUrl}}"], "path": ["api", "users", "result"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"No Email Field\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

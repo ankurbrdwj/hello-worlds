@@ -1,4 +1,19 @@
 services:
+  app:
+    build: .
+    container_name: price-alert-app
+    depends_on:
+      - postgres
+    ports:
+      - "9095:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/price_alerts
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres123
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
+      MARKET_FEED_WEBSOCKET_URL: ws://host.docker.internal:9090/quotes
+    restart: on-failure
+
   postgres:
     image: postgres:15-alpine
     container_name: price-alert-postgres
@@ -8,6 +23,9 @@ services:
       POSTGRES_PASSWORD: postgres123
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     restart: always
 
   conduktor-console:
@@ -26,3 +44,6 @@ services:
       CDK_CLUSTERS_0_BOOTSTRAPSERVERS: host.docker.internal:9092
       CDK_CLUSTERS_0_SECURITY_PROTOCOL: PLAINTEXT
     restart: always
+
+volumes:
+  postgres_data:
