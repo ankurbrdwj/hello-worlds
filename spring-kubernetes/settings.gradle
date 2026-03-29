@@ -1,0 +1,3 @@
+rootProject.name = 'spring-kubernetes'
+include 'hello-spring-k8s'
+include 'hello-caller'

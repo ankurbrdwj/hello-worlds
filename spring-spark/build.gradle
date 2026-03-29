@@ -1,0 +1,55 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ankur'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+configurations.all {
+	resolutionStrategy {
+		force 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+		force 'com.fasterxml.jackson.core:jackson-core:2.18.2'
+		force 'com.fasterxml.jackson.core:jackson-annotations:2.18.2'
+	}
+	exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+	exclude group: 'log4j', module: 'log4j'
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-rest-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testCompileOnly 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// Apache Spark
+	implementation('org.apache.spark:spark-core_2.13:3.5.4') {
+		exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+		exclude group: 'log4j', module: 'log4j'
+	}
+	implementation('org.apache.spark:spark-sql_2.13:3.5.4') {
+		exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+		exclude group: 'log4j', module: 'log4j'
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

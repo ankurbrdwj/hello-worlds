@@ -18,7 +18,7 @@ public class LogLimiterImpl implements RateLimiter {
 
     @Override
     public boolean allow(String key, long nowMillis) {
-        long windowSartTime = nowMillis-this.windowMillis;
+        long windowStartTime = nowMillis-this.windowMillis;
         long windowEndTime = nowMillis;
 
         // getEvents for this key
@@ -26,7 +26,7 @@ public class LogLimiterImpl implements RateLimiter {
         // remove old events
         // Queue is first-in-first-out we always remove from head by poll or remove
         Long first;
-        while((first = events.peekFirst()) != null && first <= windowSartTime){
+        while((first = events.peekFirst()) != null && first <= windowStartTime){
             events.pollFirst();
         }
         // check if under maxEvents
