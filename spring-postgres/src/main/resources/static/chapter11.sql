@@ -74,7 +74,8 @@ SELECT a.user_id,
        a.session_id AS session_a,
        b.session_id AS session_b,
        a.started_at,
-       b.started_at AS next_started_at
+       b.started_at AS next_started_at' ||
+    '\
 FROM sessions a
          JOIN sessions b
               ON b.user_id = a.user_id
