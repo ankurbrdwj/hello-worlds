@@ -29,6 +29,7 @@ public class WordCount {
         SparkSession spark = SparkSession.builder()
                 .appName("WordCount")
                 .master("local")
+                .config("spark.ui.enabled", "false")
                 .getOrCreate();
 
         // Count words via RDD

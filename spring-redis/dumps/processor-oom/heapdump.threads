@@ -1,0 +1,1210 @@
+Thread 0xf006f000
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf006ef98, line=1
+    objectId=0xf006f000, line=1
+    objectId=0xf006ef98, line=2
+    objectId=0xf006efe8, line=2
+    objectId=0xf006ef98, line=3
+    objectId=0xf006ef68, line=4
+    objectId=0xf008a260, line=4
+    objectId=0xf00304a0, line=4
+    objectId=0xf006ef10, line=4
+    objectId=0xf006ef98, line=4
+    objectId=0xf008a278, line=5
+    objectId=0xf008a290, line=6
+    objectId=0xf008a278, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf006f1c0, line=7
+    objectId=0xf006f000, line=7
+    objectId=0xf008a290, line=7
+    objectId=0xf006f1c0, line=8
+    objectId=0xf006f000, line=9
+
+Thread 0xf002f250
+  at java.lang.OutOfMemoryError.<init>()V (OutOfMemoryError.java:48)
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.toByteArray()[B (ByteArrayOutputStream.java:191)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:55)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf1194ab8, line=1
+    objectId=0xf1189458, line=2
+    objectId=0xf1188f38, line=3
+    objectId=0xf1189458, line=3
+    objectId=0xf1189470, line=3
+    objectId=0xf0002b48, line=4
+    objectId=0xf0030560, line=4
+    objectId=0xf004c3d0, line=4
+    objectId=0xf004c2e8, line=4
+    objectId=0xf002fd30, line=5
+    objectId=0xf0030560, line=5
+    objectId=0xf002fd18, line=6
+    objectId=0xf002fcf8, line=7
+    objectId=0xf002fd18, line=7
+    objectId=0xf0002c00, line=8
+    objectId=0xf002f410, line=8
+    objectId=0xf002f250, line=8
+    objectId=0xf002fcf8, line=8
+    objectId=0xf002f410, line=9
+    objectId=0xf002f250, line=10
+
+Thread 0xf0089670
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf00897e8, line=1
+    objectId=0xf0089670, line=1
+    objectId=0xf00897e8, line=2
+    objectId=0xf0089808, line=2
+    objectId=0xf00897e8, line=3
+    objectId=0xf0089820, line=4
+    objectId=0xf0089838, line=4
+    objectId=0xf0030160, line=4
+    objectId=0xf0089850, line=4
+    objectId=0xf00897e8, line=4
+    objectId=0xf0089868, line=5
+    objectId=0xf0089880, line=6
+    objectId=0xf0089868, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf00898a0, line=7
+    objectId=0xf0089670, line=7
+    objectId=0xf0089880, line=7
+    objectId=0xf00898a0, line=8
+    objectId=0xf0089670, line=9
+
+Thread 0xf00000a8
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await()V (AbstractQueuedSynchronizer.java:2039)
+  at java.util.concurrent.LinkedBlockingQueue.take()Ljava/lang/Object; (LinkedBlockingQueue.java:442)
+  at java.util.concurrent.ThreadPoolExecutor.getTask()Ljava/lang/Runnable; (ThreadPoolExecutor.java:1074)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1134)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0002d18, line=1
+    objectId=0xf00000a8, line=1
+    objectId=0xf0002d18, line=2
+    objectId=0xf7d99848, line=2
+    objectId=0xf0002c90, line=3
+    objectId=0xf0002cc0, line=3
+    objectId=0xf0002ce8, line=3
+    objectId=0xf0002c00, line=4
+    objectId=0xf0002c00, line=5
+    objectId=0xf0000220, line=5
+    objectId=0xf00000a8, line=5
+    objectId=0xf0000220, line=6
+    objectId=0xf00000a8, line=7
+
+Thread 0xf005d688
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf00202f8, line=1
+    objectId=0xf005d688, line=1
+    objectId=0xf00202f8, line=2
+    objectId=0xf005d800, line=2
+    objectId=0xf00202f8, line=3
+    objectId=0xf00202c8, line=4
+    objectId=0xf005d818, line=4
+    objectId=0xf002ffc0, line=4
+    objectId=0xf0020270, line=4
+    objectId=0xf00202f8, line=4
+    objectId=0xf005d830, line=5
+    objectId=0xf005d848, line=6
+    objectId=0xf005d830, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf005d868, line=7
+    objectId=0xf005d688, line=7
+    objectId=0xf005d848, line=7
+    objectId=0xf005d868, line=8
+    objectId=0xf005d688, line=9
+
+Thread 0xf0089d00
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0089e78, line=1
+    objectId=0xf0089d00, line=1
+    objectId=0xf0089e78, line=2
+    objectId=0xf0089e98, line=2
+    objectId=0xf0089e78, line=3
+    objectId=0xf0089eb0, line=4
+    objectId=0xf0089ec8, line=4
+    objectId=0xf0030368, line=4
+    objectId=0xf0089ee0, line=4
+    objectId=0xf0089e78, line=4
+    objectId=0xf0089ef8, line=5
+    objectId=0xf0089f10, line=6
+    objectId=0xf0089ef8, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0089f30, line=7
+    objectId=0xf0089d00, line=7
+    objectId=0xf0089f10, line=7
+    objectId=0xf0089f30, line=8
+    objectId=0xf0089d00, line=9
+
+Thread 0xf002e860
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:52)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf3194ac8, line=0
+    objectId=0xf3194f58, line=0
+    objectId=0xf3194f70, line=0
+    objectId=0xf0002b48, line=1
+    objectId=0xf0089ee0, line=1
+    objectId=0xf000d500, line=1
+    objectId=0xf003b1a8, line=1
+    objectId=0xf0089eb0, line=2
+    objectId=0xf0089ee0, line=2
+    objectId=0xf0089ff0, line=3
+    objectId=0xf0089e78, line=4
+    objectId=0xf0089ff0, line=4
+    objectId=0xf0002c00, line=5
+    objectId=0xf002ea20, line=5
+    objectId=0xf002e860, line=5
+    objectId=0xf0089e78, line=5
+    objectId=0xf002ea20, line=6
+    objectId=0xf002e860, line=7
+
+Thread 0xf0073b30
+  at java.net.SocketInputStream.socketRead0(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java(Native Method))
+  at java.net.SocketInputStream.socketRead(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java:116)
+  at java.net.SocketInputStream.read([BIII)I (SocketInputStream.java:171)
+  at java.net.SocketInputStream.read([BII)I (SocketInputStream.java:141)
+  at java.io.BufferedInputStream.read1([BII)I (BufferedInputStream.java:284)
+  at java.io.BufferedInputStream.read([BII)I (BufferedInputStream.java:345)
+  at sun.net.www.MeteredStream.read([BII)I (MeteredStream.java:134)
+  at java.io.FilterInputStream.read([BII)I (FilterInputStream.java:133)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([BII)I (HttpURLConnection.java:3477)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([B)I (HttpURLConnection.java:3470)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:52)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0073ca8, line=2
+    objectId=0xf1192aa8, line=2
+    objectId=0xf0073cd8, line=2
+    objectId=0xf0079d18, line=5
+    objectId=0xf1192aa8, line=5
+    objectId=0xf118f6d8, line=6
+    objectId=0xf118ff38, line=8
+    objectId=0xf1192aa8, line=8
+    objectId=0xf118ff38, line=10
+    objectId=0xf1192a90, line=10
+    objectId=0xf1192aa8, line=10
+    objectId=0xf0002b48, line=11
+    objectId=0xf0031970, line=11
+    objectId=0xf0079ea8, line=11
+    objectId=0xf0079dc0, line=11
+    objectId=0xf0031918, line=12
+    objectId=0xf0031970, line=12
+    objectId=0xf0031900, line=13
+    objectId=0xf00318e0, line=14
+    objectId=0xf0031900, line=14
+    objectId=0xf0002c00, line=15
+    objectId=0xf0079ee8, line=15
+    objectId=0xf0073b30, line=15
+    objectId=0xf00318e0, line=15
+    objectId=0xf0079ee8, line=16
+    objectId=0xf0073b30, line=17
+
+Thread 0xf118b480
+  at java.lang.Thread.sleep(J)V (Thread.java(Native Method))
+  at sun.net.www.http.KeepAliveCache.run()V (KeepAliveCache.java:244)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0146578, line=1
+    objectId=0xf118b480, line=2
+
+Thread 0xf002dfa8
+  at java.lang.Object.wait(J)V (Object.java(Native Method))
+  at java.lang.ref.ReferenceQueue.remove(J)Ljava/lang/ref/Reference; (ReferenceQueue.java:144)
+  at java.lang.ref.ReferenceQueue.remove()Ljava/lang/ref/Reference; (ReferenceQueue.java:165)
+  at java.lang.ref.Finalizer$FinalizerThread.run()V (Finalizer.java:188)
+
+  locals:
+    objectId=0xf008f2f0, line=1
+    objectId=0xf008f2e0, line=1
+    objectId=0xf008f2f0, line=2
+    objectId=0xf002dfa8, line=3
+    objectId=0xf008f310, line=3
+
+Thread 0xf002f5a0
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf005d090, line=1
+    objectId=0xf002f5a0, line=1
+    objectId=0xf005d090, line=2
+    objectId=0xf005d0b0, line=2
+    objectId=0xf005d090, line=3
+    objectId=0xf005d0c8, line=4
+    objectId=0xf005d0e0, line=4
+    objectId=0xf002fe08, line=4
+    objectId=0xf005d0f8, line=4
+    objectId=0xf005d090, line=4
+    objectId=0xf005d110, line=5
+    objectId=0xf005d128, line=6
+    objectId=0xf005d110, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf002f760, line=7
+    objectId=0xf002f5a0, line=7
+    objectId=0xf005d128, line=7
+    objectId=0xf002f760, line=8
+    objectId=0xf002f5a0, line=9
+
+Thread 0xf002fa28
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf002fcf8, line=1
+    objectId=0xf002fa28, line=1
+    objectId=0xf002fcf8, line=2
+    objectId=0xf00305a0, line=2
+    objectId=0xf002fcf8, line=3
+    objectId=0xf002fd30, line=4
+    objectId=0xf0089b98, line=4
+    objectId=0xf0030230, line=4
+    objectId=0xf0030560, line=4
+    objectId=0xf002fcf8, line=4
+    objectId=0xf0089bb0, line=5
+    objectId=0xf0089bc8, line=6
+    objectId=0xf0089bb0, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf002f9f8, line=7
+    objectId=0xf002fa28, line=7
+    objectId=0xf0089bc8, line=7
+    objectId=0xf002f9f8, line=8
+    objectId=0xf002fa28, line=9
+
+Thread 0xf00319b0
+  at sun.net.www.HeaderParser.<init>(Ljava/lang/String;)V (HeaderParser.java:60)
+  at sun.net.www.http.HttpClient.parseHTTPHeader(Lsun/net/www/MessageHeader;Lsun/net/ProgressSource;Lsun/net/www/protocol/http/HttpURLConnection;)Z (HttpClient.java:818)
+  at sun.net.www.http.HttpClient.parseHTTP(Lsun/net/www/MessageHeader;Lsun/net/ProgressSource;Lsun/net/www/protocol/http/HttpURLConnection;)Z (HttpClient.java:680)
+  at sun.net.www.protocol.http.HttpURLConnection.getInputStream0()Ljava/io/InputStream; (HttpURLConnection.java:1612)
+  at sun.net.www.protocol.http.HttpURLConnection.getInputStream()Ljava/io/InputStream; (HttpURLConnection.java:1517)
+  at java.net.HttpURLConnection.getResponseCode()I (HttpURLConnection.java:480)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:35)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xfe690fc0, line=0
+    objectId=0xfe690f00, line=0
+    objectId=0xf0033bc8, line=1
+    objectId=0xf0033c20, line=1
+    objectId=0xf0033c48, line=1
+    objectId=0xf0033bb0, line=1
+    objectId=0xfe690f80, line=1
+    objectId=0xf0033bc8, line=2
+    objectId=0xf0033c20, line=2
+    objectId=0xf0033c48, line=2
+    objectId=0xf0033c48, line=3
+    objectId=0xf0033c48, line=4
+    objectId=0xf0033c48, line=5
+    objectId=0xf0002b48, line=6
+    objectId=0xf0033d30, line=6
+    objectId=0xf0033d48, line=6
+    objectId=0xf0033c48, line=6
+    objectId=0xf0033d88, line=7
+    objectId=0xf0033d30, line=7
+    objectId=0xf0033da0, line=8
+    objectId=0xf0033db8, line=9
+    objectId=0xf0033da0, line=9
+    objectId=0xf0002c00, line=10
+    objectId=0xf0033dd8, line=10
+    objectId=0xf00319b0, line=10
+    objectId=0xf0033db8, line=10
+    objectId=0xf0033dd8, line=11
+    objectId=0xf00319b0, line=12
+
+Thread 0xf005df28
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0002be0, line=1
+    objectId=0xf005df28, line=1
+    objectId=0xf0002be0, line=2
+    objectId=0xf005e0a0, line=2
+    objectId=0xf0002be0, line=3
+    objectId=0xf0002bb0, line=4
+    objectId=0xf005e0b8, line=4
+    objectId=0xf0030090, line=4
+    objectId=0xf0002b58, line=4
+    objectId=0xf0002be0, line=4
+    objectId=0xf005e0d0, line=5
+    objectId=0xf005e0e8, line=6
+    objectId=0xf005e0d0, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf005e108, line=7
+    objectId=0xf005df28, line=7
+    objectId=0xf005e0e8, line=7
+    objectId=0xf005e108, line=8
+    objectId=0xf005df28, line=9
+
+Thread 0xf0030a50
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0030d60, line=1
+    objectId=0xf0030a50, line=1
+    objectId=0xf0030d60, line=2
+    objectId=0xf0031140, line=2
+    objectId=0xf0030d60, line=3
+    objectId=0xf0030d98, line=4
+    objectId=0xf008a1e8, line=4
+    objectId=0xf0030438, line=4
+    objectId=0xf0030df0, line=4
+    objectId=0xf0030d60, line=4
+    objectId=0xf008a200, line=5
+    objectId=0xf008a218, line=6
+    objectId=0xf008a200, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0030a20, line=7
+    objectId=0xf0030a50, line=7
+    objectId=0xf008a218, line=7
+    objectId=0xf0030a20, line=8
+    objectId=0xf0030a50, line=9
+
+Thread 0xf002ef00
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf8e1e210, line=0
+    objectId=0xf118b5f8, line=1
+    objectId=0xf118b5f8, line=3
+    objectId=0xf118b610, line=3
+    objectId=0xf11904c8, line=4
+    objectId=0xf118b5f8, line=4
+    objectId=0xf118b610, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf0031518, line=5
+    objectId=0xf0043bb8, line=5
+    objectId=0xf0043ad0, line=5
+    objectId=0xf00314c0, line=6
+    objectId=0xf0031518, line=6
+    objectId=0xf00314a8, line=7
+    objectId=0xf0031488, line=8
+    objectId=0xf00314a8, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf002f0c0, line=9
+    objectId=0xf002ef00, line=9
+    objectId=0xf0031488, line=9
+    objectId=0xf002f0c0, line=10
+    objectId=0xf002ef00, line=11
+
+Thread 0xf00315d0
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf00318e0, line=1
+    objectId=0xf00315d0, line=1
+    objectId=0xf00318e0, line=2
+    objectId=0xf00895e0, line=2
+    objectId=0xf00318e0, line=3
+    objectId=0xf0031918, line=4
+    objectId=0xf00895f8, line=4
+    objectId=0xf00300f8, line=4
+    objectId=0xf0031970, line=4
+    objectId=0xf00318e0, line=4
+    objectId=0xf0089610, line=5
+    objectId=0xf0089628, line=6
+    objectId=0xf0089610, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf00315a0, line=7
+    objectId=0xf00315d0, line=7
+    objectId=0xf0089628, line=7
+    objectId=0xf00315a0, line=8
+    objectId=0xf00315d0, line=9
+
+Thread 0xf00007c8
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xfe190a38, line=0
+    objectId=0xf7d99cf8, line=1
+    objectId=0xf7d99cf8, line=3
+    objectId=0xf7d99d10, line=3
+    objectId=0xf7d99cc8, line=4
+    objectId=0xf7d99cf8, line=4
+    objectId=0xf7d99d10, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf0002b58, line=5
+    objectId=0xf0002b70, line=5
+    objectId=0xf0002a60, line=5
+    objectId=0xf0002bb0, line=6
+    objectId=0xf0002b58, line=6
+    objectId=0xf0002bc8, line=7
+    objectId=0xf0002be0, line=8
+    objectId=0xf0002bc8, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf0002c50, line=9
+    objectId=0xf00007c8, line=9
+    objectId=0xf0002be0, line=9
+    objectId=0xf0002c50, line=10
+    objectId=0xf00007c8, line=11
+
+Thread 0xf008a2c8
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService.process(Ljava/nio/file/Path;Ljava/nio/file/Path;)V (FileProcessorService.java:64)
+  at com.ankur.processor.Main.main([Ljava/lang/String;)V (Main.java:27)
+
+  locals:
+    objectId=0xf008a290, line=1
+    objectId=0xf008a2c8, line=1
+    objectId=0xf008a290, line=2
+    objectId=0xf008a2b0, line=2
+    objectId=0xf008a290, line=3
+    objectId=0xf0030548, line=4
+    objectId=0xf008f330, line=4
+    objectId=0xf0030508, line=4
+    objectId=0xf002fd88, line=4
+    objectId=0xf008f350, line=4
+    objectId=0xf002f790, line=4
+    objectId=0xf008f368, line=4
+    objectId=0xf008f380, line=4
+    objectId=0xf008a290, line=4
+    objectId=0xf008f3a0, line=5
+    objectId=0xf008f3b0, line=5
+    objectId=0xf008f3c8, line=5
+    objectId=0xf008f3e0, line=5
+    objectId=0xf0002b48, line=5
+    objectId=0xf0030548, line=5
+
+Thread 0xf005d268
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0033db8, line=1
+    objectId=0xf005d268, line=1
+    objectId=0xf0033db8, line=2
+    objectId=0xf005d3e0, line=2
+    objectId=0xf0033db8, line=3
+    objectId=0xf0033d88, line=4
+    objectId=0xf005d3f8, line=4
+    objectId=0xf002ff58, line=4
+    objectId=0xf0033d30, line=4
+    objectId=0xf0033db8, line=4
+    objectId=0xf005d410, line=5
+    objectId=0xf005d428, line=6
+    objectId=0xf005d410, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf005d448, line=7
+    objectId=0xf005d268, line=7
+    objectId=0xf005d428, line=7
+    objectId=0xf005d448, line=8
+    objectId=0xf005d268, line=9
+
+Thread 0xf0038a10
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf00389d8, line=1
+    objectId=0xf0038a10, line=1
+    objectId=0xf00389d8, line=2
+    objectId=0xf00389f8, line=2
+    objectId=0xf00389d8, line=3
+    objectId=0xf00389a8, line=4
+    objectId=0xf0089c88, line=4
+    objectId=0xf0030300, line=4
+    objectId=0xf0038950, line=4
+    objectId=0xf00389d8, line=4
+    objectId=0xf0089ca0, line=5
+    objectId=0xf0089cb8, line=6
+    objectId=0xf0089ca0, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0038bd0, line=7
+    objectId=0xf0038a10, line=7
+    objectId=0xf0089cb8, line=7
+    objectId=0xf0038bd0, line=8
+    objectId=0xf0038a10, line=9
+
+Thread 0xf0033e08
+  at java.net.SocketInputStream.socketRead0(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java(Native Method))
+  at java.net.SocketInputStream.socketRead(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java:116)
+  at java.net.SocketInputStream.read([BIII)I (SocketInputStream.java:171)
+  at java.net.SocketInputStream.read([BII)I (SocketInputStream.java:141)
+  at java.io.BufferedInputStream.fill()V (BufferedInputStream.java:246)
+  at java.io.BufferedInputStream.read1([BII)I (BufferedInputStream.java:286)
+  at java.io.BufferedInputStream.read([BII)I (BufferedInputStream.java:345)
+  at sun.net.www.http.HttpClient.parseHTTPHeader(Lsun/net/www/MessageHeader;Lsun/net/ProgressSource;Lsun/net/www/protocol/http/HttpURLConnection;)Z (HttpClient.java:745)
+  at sun.net.www.http.HttpClient.parseHTTP(Lsun/net/www/MessageHeader;Lsun/net/ProgressSource;Lsun/net/www/protocol/http/HttpURLConnection;)Z (HttpClient.java:680)
+  at sun.net.www.protocol.http.HttpURLConnection.getInputStream0()Ljava/io/InputStream; (HttpURLConnection.java:1612)
+  at sun.net.www.protocol.http.HttpURLConnection.getInputStream()Ljava/io/InputStream; (HttpURLConnection.java:1517)
+  at java.net.HttpURLConnection.getResponseCode()I (HttpURLConnection.java:480)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:35)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0033f80, line=1
+    objectId=0xf0033fb0, line=1
+    objectId=0xf0033fd0, line=1
+    objectId=0xf0033f80, line=2
+    objectId=0xf0033fd0, line=2
+    objectId=0xf0033fb0, line=2
+    objectId=0xf0033f80, line=3
+    objectId=0xf0033fd0, line=3
+    objectId=0xf0035fe0, line=4
+    objectId=0xf0033fd0, line=4
+    objectId=0xf0035fe0, line=5
+    objectId=0xf0036008, line=5
+    objectId=0xf0035fe0, line=6
+    objectId=0xf0036008, line=6
+    objectId=0xf0036020, line=7
+    objectId=0xf0036078, line=7
+    objectId=0xf00360a0, line=7
+    objectId=0xf0036008, line=7
+    objectId=0xf0036020, line=8
+    objectId=0xf0036078, line=8
+    objectId=0xf00360a0, line=8
+    objectId=0xf00360a0, line=9
+    objectId=0xf00360a0, line=10
+    objectId=0xf00360a0, line=11
+    objectId=0xf0002b48, line=12
+    objectId=0xf0036188, line=12
+    objectId=0xf00361a0, line=12
+    objectId=0xf00360a0, line=12
+    objectId=0xf00361e0, line=13
+    objectId=0xf0036188, line=13
+    objectId=0xf00361f8, line=14
+    objectId=0xf0036210, line=15
+    objectId=0xf00361f8, line=15
+    objectId=0xf0002c00, line=16
+    objectId=0xf0036230, line=16
+    objectId=0xf0033e08, line=16
+    objectId=0xf0036210, line=16
+    objectId=0xf0036230, line=17
+    objectId=0xf0033e08, line=18
+
+Thread 0xf0068b98
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf79997e0, line=0
+    objectId=0xf4597798, line=1
+    objectId=0xf4597798, line=3
+    objectId=0xf45977b0, line=3
+    objectId=0xf4597768, line=4
+    objectId=0xf4597798, line=4
+    objectId=0xf45977b0, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf006ef10, line=5
+    objectId=0xf006ef28, line=5
+    objectId=0xf006ee28, line=5
+    objectId=0xf006ef68, line=6
+    objectId=0xf006ef10, line=6
+    objectId=0xf006ef80, line=7
+    objectId=0xf006ef98, line=8
+    objectId=0xf006ef80, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf006efb8, line=9
+    objectId=0xf0068b98, line=9
+    objectId=0xf006ef98, line=9
+    objectId=0xf006efb8, line=10
+    objectId=0xf0068b98, line=11
+
+Thread 0xf0003140
+
+  locals:
+
+Thread 0xf0002ec8
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await()V (AbstractQueuedSynchronizer.java:2039)
+  at java.util.concurrent.LinkedBlockingQueue.take()Ljava/lang/Object; (LinkedBlockingQueue.java:442)
+  at java.util.concurrent.ThreadPoolExecutor.getTask()Ljava/lang/Runnable; (ThreadPoolExecutor.java:1074)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1134)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0002d18, line=1
+    objectId=0xf0002ec8, line=1
+    objectId=0xf0002d18, line=2
+    objectId=0xf3197248, line=2
+    objectId=0xf0002c90, line=3
+    objectId=0xf0002cc0, line=3
+    objectId=0xf0002ce8, line=3
+    objectId=0xf0002c00, line=4
+    objectId=0xf0002c00, line=5
+    objectId=0xf0002e98, line=5
+    objectId=0xf0002ec8, line=5
+    objectId=0xf0002e98, line=6
+    objectId=0xf0002ec8, line=7
+
+Thread 0xf0084ab0
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0084a48, line=1
+    objectId=0xf0084ab0, line=1
+    objectId=0xf0084a48, line=2
+    objectId=0xf0084a98, line=2
+    objectId=0xf0084a48, line=3
+    objectId=0xf0084a18, line=4
+    objectId=0xf0089b20, line=4
+    objectId=0xf00301c8, line=4
+    objectId=0xf00849c0, line=4
+    objectId=0xf0084a48, line=4
+    objectId=0xf0089b38, line=5
+    objectId=0xf0089b50, line=6
+    objectId=0xf0089b38, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0084c70, line=7
+    objectId=0xf0084ab0, line=7
+    objectId=0xf0089b50, line=7
+    objectId=0xf0084c70, line=8
+    objectId=0xf0084ab0, line=9
+
+Thread 0xf001df08
+  at java.net.SocketInputStream.socketRead0(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java(Native Method))
+  at java.net.SocketInputStream.socketRead(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java:116)
+  at java.net.SocketInputStream.read([BIII)I (SocketInputStream.java:171)
+  at java.net.SocketInputStream.read([BII)I (SocketInputStream.java:141)
+  at java.io.BufferedInputStream.read1([BII)I (BufferedInputStream.java:284)
+  at java.io.BufferedInputStream.read([BII)I (BufferedInputStream.java:345)
+  at sun.net.www.MeteredStream.read([BII)I (MeteredStream.java:134)
+  at java.io.FilterInputStream.read([BII)I (FilterInputStream.java:133)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([BII)I (HttpURLConnection.java:3477)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([B)I (HttpURLConnection.java:3470)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:52)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf001e080, line=2
+    objectId=0xf118d638, line=2
+    objectId=0xf001e0b0, line=2
+    objectId=0xf00200e0, line=5
+    objectId=0xf118d638, line=5
+    objectId=0xf1190630, line=6
+    objectId=0xf118f648, line=8
+    objectId=0xf118d638, line=8
+    objectId=0xf118f648, line=10
+    objectId=0xf118d620, line=10
+    objectId=0xf118d638, line=10
+    objectId=0xf0002b48, line=11
+    objectId=0xf0020270, line=11
+    objectId=0xf0020288, line=11
+    objectId=0xf0020188, line=11
+    objectId=0xf00202c8, line=12
+    objectId=0xf0020270, line=12
+    objectId=0xf00202e0, line=13
+    objectId=0xf00202f8, line=14
+    objectId=0xf00202e0, line=14
+    objectId=0xf0002c00, line=15
+    objectId=0xf0020318, line=15
+    objectId=0xf001df08, line=15
+    objectId=0xf00202f8, line=15
+    objectId=0xf0020318, line=16
+    objectId=0xf001df08, line=17
+
+Thread 0xf005daa8
+  at java.lang.Thread.sleep(J)V (Thread.java(Native Method))
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:143)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf005dc40, line=1
+    objectId=0xf005dc58, line=1
+    objectId=0xf0030028, line=1
+    objectId=0xf005dc70, line=1
+    objectId=0xf005dc20, line=1
+    objectId=0xf65997d0, line=1
+    objectId=0xf005dc88, line=2
+    objectId=0xf005dca0, line=3
+    objectId=0xf005dc88, line=3
+    objectId=0xf002f790, line=4
+    objectId=0xf005dcc0, line=4
+    objectId=0xf005daa8, line=4
+    objectId=0xf005dca0, line=4
+    objectId=0xf005dcc0, line=5
+    objectId=0xf005daa8, line=6
+
+Thread 0xf0036278
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0036210, line=1
+    objectId=0xf0036278, line=1
+    objectId=0xf0036210, line=2
+    objectId=0xf0036260, line=2
+    objectId=0xf0036210, line=3
+    objectId=0xf00361e0, line=4
+    objectId=0xf008a170, line=4
+    objectId=0xf00303d0, line=4
+    objectId=0xf0036188, line=4
+    objectId=0xf0036210, line=4
+    objectId=0xf008a188, line=5
+    objectId=0xf008a1a0, line=6
+    objectId=0xf008a188, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0036438, line=7
+    objectId=0xf0036278, line=7
+    objectId=0xf008a1a0, line=7
+    objectId=0xf0036438, line=8
+    objectId=0xf0036278, line=9
+
+Thread 0xf002ebb0
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xfe090a28, line=0
+    objectId=0xfd4004c0, line=1
+    objectId=0xfd4004c0, line=3
+    objectId=0xfd4004d8, line=3
+    objectId=0xfd400490, line=4
+    objectId=0xfd4004c0, line=4
+    objectId=0xfd4004d8, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf0038950, line=5
+    objectId=0xf0038968, line=5
+    objectId=0xf0038868, line=5
+    objectId=0xf00389a8, line=6
+    objectId=0xf0038950, line=6
+    objectId=0xf00389c0, line=7
+    objectId=0xf00389d8, line=8
+    objectId=0xf00389c0, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf002ed70, line=9
+    objectId=0xf002ebb0, line=9
+    objectId=0xf00389d8, line=9
+    objectId=0xf002ed70, line=10
+    objectId=0xf002ebb0, line=11
+
+Thread 0xf007e648
+  at sun.net.www.MeteredStream.skip(J)J (MeteredStream.java:146)
+  at sun.net.www.http.KeepAliveStream.close()V (KeepAliveStream.java:87)
+  at java.io.FilterInputStream.close()V (FilterInputStream.java:181)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.close()V (HttpURLConnection.java:3550)
+  at sun.net.www.protocol.http.HttpURLConnection.disconnect()V (HttpURLConnection.java:2965)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:44)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf118f698, line=0
+    objectId=0xf118f698, line=1
+    objectId=0xf118fb10, line=2
+    objectId=0xf118fb10, line=3
+    objectId=0xf00848d8, line=4
+    objectId=0xf0084858, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf00849c0, line=5
+    objectId=0xf00849d8, line=5
+    objectId=0xf00848d8, line=5
+    objectId=0xf0008160, line=5
+    objectId=0xf0084a18, line=6
+    objectId=0xf00849c0, line=6
+    objectId=0xf0084a30, line=7
+    objectId=0xf0084a48, line=8
+    objectId=0xf0084a30, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf0084a68, line=9
+    objectId=0xf007e648, line=9
+    objectId=0xf0084a48, line=9
+    objectId=0xf0084a68, line=10
+    objectId=0xf007e648, line=11
+
+Thread 0xf000b138
+  at java.util.Arrays.copyOf([BI)[B (Arrays.java:3236)
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xfe590a48, line=0
+    objectId=0xfdc42ea8, line=1
+    objectId=0xfdc42ea8, line=3
+    objectId=0xfdc42ef0, line=3
+    objectId=0xfdc42e48, line=4
+    objectId=0xfdc42ea8, line=4
+    objectId=0xfdc42ef0, line=4
+    objectId=0xf0002b48, line=5
+    objectId=0xf0089850, line=5
+    objectId=0xf015e370, line=5
+    objectId=0xf000d3d0, line=5
+    objectId=0xf0089820, line=6
+    objectId=0xf0089850, line=6
+    objectId=0xf0089960, line=7
+    objectId=0xf00897e8, line=8
+    objectId=0xf0089960, line=8
+    objectId=0xf0002c00, line=9
+    objectId=0xf0151610, line=9
+    objectId=0xf000b138, line=9
+    objectId=0xf00897e8, line=9
+    objectId=0xf0151610, line=10
+    objectId=0xf000b138, line=11
+
+Thread 0xf002e1a0
+  at java.lang.Object.wait(J)V (Object.java(Native Method))
+  at java.lang.Object.wait()V (Object.java:502)
+  at java.lang.ref.Reference.tryHandlePending(Z)Z (Reference.java:191)
+  at java.lang.ref.Reference$ReferenceHandler.run()V (Reference.java:153)
+
+  locals:
+    objectId=0xf008f320, line=2
+    objectId=0xf002e1a0, line=3
+
+Thread 0xf0030628
+  at java.lang.Thread.sleep(J)V (Thread.java(Native Method))
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:143)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0030958, line=1
+    objectId=0xf005d1f0, line=1
+    objectId=0xf002fef0, line=1
+    objectId=0xf00309b0, line=1
+    objectId=0xf0030938, line=1
+    objectId=0xf3197268, line=1
+    objectId=0xf005d208, line=2
+    objectId=0xf005d220, line=3
+    objectId=0xf005d208, line=3
+    objectId=0xf002f790, line=4
+    objectId=0xf00305f8, line=4
+    objectId=0xf0030628, line=4
+    objectId=0xf005d220, line=4
+    objectId=0xf00305f8, line=5
+    objectId=0xf0030628, line=6
+
+Thread 0xf00311b8
+  at sun.misc.Unsafe.park(ZJ)V (Unsafe.java(Native Method))
+  at java.util.concurrent.locks.LockSupport.park(Ljava/lang/Object;)V (LockSupport.java:175)
+  at java.util.concurrent.FutureTask.awaitDone(ZJ)I (FutureTask.java:429)
+  at java.util.concurrent.FutureTask.get()Ljava/lang/Object; (FutureTask.java:191)
+  at com.ankur.processor.FileProcessorService$SplitTask.run()V (FileProcessorService.java:119)
+  at java.util.concurrent.Executors$RunnableAdapter.call()Ljava/lang/Object; (Executors.java:511)
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0031488, line=1
+    objectId=0xf00311b8, line=1
+    objectId=0xf0031488, line=2
+    objectId=0xf0031558, line=2
+    objectId=0xf0031488, line=3
+    objectId=0xf00314c0, line=4
+    objectId=0xf0089c10, line=4
+    objectId=0xf0030298, line=4
+    objectId=0xf0031518, line=4
+    objectId=0xf0031488, line=4
+    objectId=0xf0089c28, line=5
+    objectId=0xf0089c40, line=6
+    objectId=0xf0089c28, line=6
+    objectId=0xf002f790, line=7
+    objectId=0xf0031188, line=7
+    objectId=0xf00311b8, line=7
+    objectId=0xf0089c40, line=7
+    objectId=0xf0031188, line=8
+    objectId=0xf00311b8, line=9
+
+Thread 0xf002e500
+  at java.io.ByteArrayOutputStream.grow(I)V (ByteArrayOutputStream.java:118)
+  at java.io.ByteArrayOutputStream.ensureCapacity(I)V (ByteArrayOutputStream.java:93)
+  at java.io.ByteArrayOutputStream.write([BII)V (ByteArrayOutputStream.java:153)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:53)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf0020348, line=0
+    objectId=0xf0020348, line=2
+    objectId=0xf0020360, line=2
+    objectId=0xf0022370, line=3
+    objectId=0xf0020348, line=3
+    objectId=0xf0020360, line=3
+    objectId=0xf0002b48, line=4
+    objectId=0xf005d0f8, line=4
+    objectId=0xf00223a0, line=4
+    objectId=0xf00223e0, line=4
+    objectId=0xf005d0c8, line=5
+    objectId=0xf005d0f8, line=5
+    objectId=0xf005d1d8, line=6
+    objectId=0xf005d090, line=7
+    objectId=0xf005d1d8, line=7
+    objectId=0xf0002c00, line=8
+    objectId=0xf002e6c0, line=8
+    objectId=0xf002e500, line=8
+    objectId=0xf005d090, line=8
+    objectId=0xf002e6c0, line=9
+    objectId=0xf002e500, line=10
+
+Thread 0xf0030e30
+  at java.net.SocketInputStream.socketRead0(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java(Native Method))
+  at java.net.SocketInputStream.socketRead(Ljava/io/FileDescriptor;[BIII)I (SocketInputStream.java:116)
+  at java.net.SocketInputStream.read([BIII)I (SocketInputStream.java:171)
+  at java.net.SocketInputStream.read([BII)I (SocketInputStream.java:141)
+  at java.io.BufferedInputStream.read1([BII)I (BufferedInputStream.java:284)
+  at java.io.BufferedInputStream.read([BII)I (BufferedInputStream.java:345)
+  at sun.net.www.MeteredStream.read([BII)I (MeteredStream.java:134)
+  at java.io.FilterInputStream.read([BII)I (FilterInputStream.java:133)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([BII)I (HttpURLConnection.java:3477)
+  at sun.net.www.protocol.http.HttpURLConnection$HttpInputStream.read([B)I (HttpURLConnection.java:3470)
+  at com.ankur.processor.CacheRestClient.drain(Ljava/io/InputStream;)[B (CacheRestClient.java:52)
+  at com.ankur.processor.CacheRestClient.get(Ljava/lang/String;)[B (CacheRestClient.java:42)
+  at com.ankur.processor.FileProcessorService$SplitTask.lambda$run$0(Ljava/lang/String;)[B (FileProcessorService.java:103)
+  at com.ankur.processor.FileProcessorService$SplitTask$$Lambda$21.call()Ljava/lang/Object; ()
+  at java.util.concurrent.FutureTask.run()V (FutureTask.java:266)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V (ThreadPoolExecutor.java:1149)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run()V (ThreadPoolExecutor.java:624)
+  at java.lang.Thread.run()V (Thread.java:750)
+
+  locals:
+    objectId=0xf005e348, line=2
+    objectId=0xf7e1c1d8, line=2
+    objectId=0xf005e378, line=2
+    objectId=0xf00643b8, line=5
+    objectId=0xf7e1c1d8, line=5
+    objectId=0xf7e1c128, line=6
+    objectId=0xf7e1c190, line=8
+    objectId=0xf7e1c1d8, line=8
+    objectId=0xf7e1c190, line=10
+    objectId=0xf7e1c1c0, line=10
+    objectId=0xf7e1c1d8, line=10
+    objectId=0xf0002b48, line=11
+    objectId=0xf0030df0, line=11
+    objectId=0xf0064548, line=11
+    objectId=0xf0064460, line=11
+    objectId=0xf0030d98, line=12
+    objectId=0xf0030df0, line=12
+    objectId=0xf0030d80, line=13
+    objectId=0xf0030d60, line=14
+    objectId=0xf0030d80, line=14
+    objectId=0xf0002c00, line=15
+    objectId=0xf0030ff0, line=15
+    objectId=0xf0030e30, line=15
+    objectId=0xf0030d60, line=15
+    objectId=0xf0030ff0, line=16
+    objectId=0xf0030e30, line=17
+

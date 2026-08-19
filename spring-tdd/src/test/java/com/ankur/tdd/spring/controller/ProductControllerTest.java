@@ -50,7 +50,7 @@ public class ProductControllerTest {
         productResponse = new ProductResponse(
                 saved.getId(),
                 saved.getProductName(),
-                saved.getQuantity(),
+                saved.getQuantity(),.claude
                 saved.getCreatedAt(),
                 saved.getModifiedAt(),
                 saved.getVersion());

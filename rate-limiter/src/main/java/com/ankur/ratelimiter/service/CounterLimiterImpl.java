@@ -48,12 +48,25 @@ public class CounterLimiterImpl implements RateLimiter {
             }
 
             // Calculate how far we are into the current window
+            // Example: windowSizeMillis = 60_000 (1 min), nowMillis = 125_000
+            //   -> currentWindowId = 125_000 / 60_000 = 2 (windows: [0,60k), [60k,120k), [120k,180k)...)
+            //   -> timeIntoCurrentWindow = 125_000 % 60_000 = 5_000ms (5s into window #2)
             long timeIntoCurrentWindow = nowMillis % windowSizeMillis;
 
             // Calculate overlap with previous window (as a percentage)
+            // Continuing example: overlap = (60_000 - 5_000) / 60_000 = 0.9166 (91.66%)
+            //   -> we're near the start of the window, so most of the previous window still "counts"
+            // Edge cases:
+            //   timeIntoCurrentWindow = 0       -> overlap = 1.0  (acts like a fixed window, full previous count applied)
+            //   timeIntoCurrentWindow = 59_999  -> overlap ≈ 0.0  (previous window barely counts anymore)
             double previousWindowOverlap = (windowSizeMillis - timeIntoCurrentWindow) / (double) windowSizeMillis;  // get previous overlap
 
             // Calculate weighted count
+            // Example: previousWindowCount = 80, currentWindowCount = 20, overlap = 0.9166
+            //   -> weightedCount = (80 * 0.9166) + 20 = 73.33 + 20 = 93.33
+            //   -> with maxRequests = 100, 93.33 < 100 so the request is ALLOWED (barely)
+            // Another example, later in the window: overlap = 0.1, same counts
+            //   -> weightedCount = (80 * 0.1) + 20 = 8 + 20 = 28  -> well under limit, plenty of room
             double weightedCount = (data.previousWindowCount * previousWindowOverlap) + data.currentWindowCount; //
 
             // Check if we're under the limit

@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17
-    container_name: spring-postgres
+    container_name: spring-postgres-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -10,6 +10,24 @@ services:
       - "5442:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: spring-postgres-app
+    ports:
+      - "6080:6080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/practice
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

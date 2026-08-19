@@ -2,6 +2,7 @@ package com.ankur.ratelimiter.service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Token Bucket Rate Limiter
@@ -35,10 +36,16 @@ public class TokenRateLimiter implements RateLimiter{
 
     @Override
     public boolean allow(String key, long nowMillis) {
-        // Get or create bucket for this key (starts full)
+        // Each key gets its own independent bucket — isolation means one client's burst
+        // does not consume tokens from another client's bucket.
         BucketData bucket = buckets.computeIfAbsent(key, k -> new BucketData(capacity, nowMillis));
 
-        synchronized (bucket) {
+        // ReentrantLock instead of synchronized: allows tryLock() for non-blocking checks
+        // and supports a fairness policy (new ReentrantLock(true)) to prevent starvation
+        // under high contention on the same key. Different keys lock different buckets,
+        // so they never block each other.
+        bucket.lock.lock();
+        try {
             // Step 1: Calculate time passed since last refill
             long timePassed = nowMillis - bucket.lastRefillTime;
 
@@ -57,6 +64,8 @@ public class TokenRateLimiter implements RateLimiter{
             }
 
             return false;  // Reject - not enough tokens
+        } finally {
+            bucket.lock.unlock();
         }
     }
 
@@ -64,6 +73,9 @@ public class TokenRateLimiter implements RateLimiter{
     private static class BucketData {
         double tokens;           // Current tokens (can be fractional)
         long lastRefillTime;     // Last time we refilled
+        // One lock per bucket: threads competing for the same key serialize here,
+        // while threads on different keys proceed in parallel without contention.
+        final ReentrantLock lock = new ReentrantLock();
 
         BucketData(int capacity, long nowMillis) {
             this.tokens = capacity;  // Start full

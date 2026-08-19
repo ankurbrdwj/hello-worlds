@@ -1,0 +1,5 @@
+hello world hello spark
+spark is fast spark is simple
+hello hello world
+the quick brown fox jumps over the lazy dog
+spark word count example

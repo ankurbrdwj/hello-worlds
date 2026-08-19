@@ -1,0 +1,86 @@
+services:
+
+  # ── 1. Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 2. Cache REST service (Spring Boot) ───────────────────────────────────────
+  # On startup, RedisDataLoader pre-loads 16 keys × 20 MB into Redis.
+  # Exposes GET /cache/{key} so the processor can fetch each object.
+  cache-service:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      LOADER_OBJECT_SIZE_MB: "20"   # 16 keys × 20 MB = 320 MB stored in Redis
+      JAVA_XMS: 512m
+      JAVA_XMX: 1g                  # needs room to serve concurrent 20 MB responses
+    volumes:
+      - ./dumps/cache:/dumps
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── 3a. Processor — OOM demo (concurrency = 16, queue capacity = 16) ───────────
+  # queue-capacity=16 ≥ file count → all 16 fetches complete before any processor
+  # blocks. All 16 processors then call writeOutput simultaneously:
+  # 16 × (20MB cached + 20MB input + 40MB merged) = 1280 MB > -Xmx256m → OOM.
+  # Heap dump lands in ./dumps/processor-oom/heapdump.hprof for analysis.
+  processor-oom:
+    build:
+      context: processor/
+    depends_on:
+      cache-service:
+        condition: service_healthy
+    environment:
+      CACHE_REST_BASE_URL: http://cache-service:8080
+      PROCESSOR_INPUT_DIR: /data/input
+      PROCESSOR_OUTPUT_DIR: /data/output-oom
+      CACHE_FETCH_CONCURRENCY: "16"   # equal to THREAD_COUNT → semaphore has no effect
+      JAVA_XMS: 64m
+      JAVA_XMX: 256m                  # intentionally low to trigger OOM
+    volumes:
+      - ./dumps/processor-oom:/dumps
+      - ./data/input:/data/input
+      - ./data/output-oom:/data/output-oom
+    profiles:
+      - oom
+
+  # ── 3b. Processor — fixed (concurrency = 4, bounded queue + backpressure) ───────
+  # queue-capacity=4: fetchers block on put() when queue is full → backpressure.
+  # Max concurrent writeOutput calls = 4 → 4 × 80 MB = 320 MB, fits in -Xmx512m.
+  processor-fixed:
+    build:
+      context: processor/
+    depends_on:
+      cache-service:
+        condition: service_healthy
+    environment:
+      CACHE_REST_BASE_URL: http://cache-service:8080
+      PROCESSOR_INPUT_DIR: /data/input
+      PROCESSOR_OUTPUT_DIR: /data/output-fixed
+      CACHE_FETCH_CONCURRENCY: "4"    # queue depth: max 4 items in flight at once
+      JAVA_XMS: 64m
+      JAVA_XMX: 512m
+    volumes:
+      - ./dumps/processor-fixed:/dumps
+      - ./data/input:/data/input
+      - ./data/output-fixed:/data/output-fixed
+    profiles:
+      - fixed
