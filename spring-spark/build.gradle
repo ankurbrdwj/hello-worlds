@@ -33,6 +33,9 @@ configurations.all {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// RetryContext/RetryTemplate used by the CalcTaskProcessor family (org.springframework.retry.*)
+	// Not in this Spring Boot version's dependency-managed BOM, so pinned explicitly.
+	implementation 'org.springframework.retry:spring-retry:2.0.5'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -54,6 +57,20 @@ dependencies {
 		exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 		exclude group: 'log4j', module: 'log4j'
 	}
+
+	// Avro <-> Parquet bridge. Bumped past the 1.13.1 Spark 3.5 bundles: com.ankur.spark code
+	// uses org.apache.parquet.conf.HadoopParquetConfiguration, which doesn't exist before 1.14.0
+	// (ParquetConfiguration/PlainParquetConfiguration live in parquet-common, the Hadoop adapter
+	// in parquet-hadoop). Gradle resolves 1.14.0 everywhere, including for Spark's own usage.
+	implementation 'org.apache.parquet:parquet-avro:1.14.0'
+	// Made explicit: parquet-avro pulls both in transitively, but com.ankur.spark code
+	// imports org.apache.avro.generic.* and org.apache.parquet.hadoop.* directly.
+	implementation 'org.apache.avro:avro:1.11.0'
+	implementation 'org.apache.parquet:parquet-hadoop:1.14.0'
+	implementation 'org.apache.parquet:parquet-common:1.14.0'
+
+	// GCS-backed ParquetStorage implementation
+	implementation 'com.google.cloud:google-cloud-storage:2.36.1'
 }
 
 // Spark requires access to internal JDK APIs on Java 17+

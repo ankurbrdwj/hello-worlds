@@ -19,6 +19,7 @@ All chapters live in `src/main/resources/static/`. Each chapter covers one query
 | chapter9.sql | Rolling metrics — ROWS/RANGE frames, date spine, cumulative, LAG, rolling min/max |
 | chapter10.sql | Previous vs current — LAG/LEAD, WoW/MoM/YoY, state changes, consecutive rows |
 | chapter11.sql | Self-joins — employee/manager, pairs, before/after events, recursive hierarchy |
+| chapter12.sql | Brokerage & trading — positions from a fills log, cost basis, realized/unrealized P&L, VWAP, fill rate, wash-trade detection |
 
 ## Seed File
 

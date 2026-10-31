@@ -1,0 +1,42 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.18'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ankur.brains'
+version = '0.0.1-SNAPSHOT'
+
+// Spring Boot 2.7 is the last line that runs on Java 8.
+// No JDK 8 is installed locally, so compile with --release 8 on a newer JDK.
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 8
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.flywaydb:flyway-core'
+	runtimeOnly 'org.postgresql:postgresql'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// 1.21.x is needed to talk to Docker Engine 28+ (older clients are rejected as API-too-old)
+	testImplementation 'org.testcontainers:postgresql:1.21.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

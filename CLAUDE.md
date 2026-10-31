@@ -53,7 +53,7 @@ Dev environment (user-service + price-alert + Postgres + Kafka): `docker-compose
 
 ## Study Modules
 
-- **`spring-postgres`** — SQL chapters in `src/main/resources/static/` (`chapter1.sql`–`chapter11.sql`). Seed once with `seed.sql`. New chapters: follow header format from chapters 4–7 (plain-text block, then `-- 1. ...` examples).
+- **`spring-postgres`** — SQL chapters in `src/main/resources/static/` (`chapter1.sql`–`chapter12.sql`). Seed once with `seed.sql`. New chapters: follow header format from chapters 4–7 (plain-text block, then `-- 1. ...` examples).
 - **`spring-kafka`** — Kafka fundamentals + crypto trade topology.
 - **`spring-saml`** — SAML2: per-tenant `RelyingPartyRegistration`, JIT provisioning, SCIM, cert rotation.
 - **`spring-tdd`**, **`spring-bdd`** — TDD/BDD with H2, no external infra needed.
@@ -72,3 +72,5 @@ Check each module's `build.gradle` — not standardised:
 - Newer (spring-postgres, spring-redis, api-gateway, outbox-pattern, webcurve-exchange): **Spring Boot 4.0.x**, Java 21
 - Older: Spring Boot 3.3.x–3.5.x, Java 21 or 22
 - `spring-redis/processor/`: Java 8, no Spring
+## LLM Wiki
+`docs/` is an LLM-maintained wiki. Before touching it read `.claude/wiki-schema.md` and `docs/INDEX.md`. Never edit `docs/raw/`; append to `docs/log.md`.

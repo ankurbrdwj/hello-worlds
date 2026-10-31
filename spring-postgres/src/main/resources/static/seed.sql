@@ -1,5 +1,5 @@
 -- ============================================================
--- seed.sql — Common tables + data for chapters 1–11
+-- seed.sql — Common tables + data for chapters 1–12
 -- Run this once against your local PostgreSQL to be able to
 -- execute every query in every chapter file.
 -- ============================================================
@@ -22,6 +22,10 @@ DROP TABLE IF EXISTS Stadium           CASCADE;
 DROP TABLE IF EXISTS Weather           CASCADE;
 DROP TABLE IF EXISTS Queries           CASCADE;
 
+DROP TABLE IF EXISTS fills             CASCADE;
+DROP TABLE IF EXISTS trade_orders      CASCADE;
+DROP TABLE IF EXISTS market_data       CASCADE;
+DROP TABLE IF EXISTS trading_accounts  CASCADE;
 DROP TABLE IF EXISTS daily_metrics     CASCADE;
 DROP TABLE IF EXISTS stock_prices      CASCADE;
 DROP TABLE IF EXISTS user_status_log   CASCADE;
@@ -217,6 +221,51 @@ CREATE TABLE IF NOT EXISTS stock_prices (
 CREATE TABLE IF NOT EXISTS daily_metrics (
     dt     DATE PRIMARY KEY,
     metric NUMERIC(10,2)
+);
+
+-- ------------------------------------------------------------
+-- Brokerage / trading tables (ch12)
+-- fills        = immutable log of executed trades (the source of truth)
+-- trade_orders = orders as submitted (may be partial / canceled / working)
+-- market_data  = daily OHLC bars per symbol (the "mark" for unrealized P&L)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS trading_accounts (
+    account_id INT PRIMARY KEY,
+    name       VARCHAR(50),
+    opened_at  DATE
+);
+
+CREATE TABLE IF NOT EXISTS trade_orders (
+    order_id     INT PRIMARY KEY,
+    account_id   INT REFERENCES trading_accounts(account_id),
+    symbol       VARCHAR(10),
+    side         VARCHAR(4),        -- 'buy' | 'sell'
+    ordered_qty  INT,
+    limit_price  NUMERIC(12,2),
+    status       VARCHAR(10),       -- 'filled' | 'partial' | 'canceled' | 'new'
+    submitted_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS fills (
+    fill_id    SERIAL PRIMARY KEY,
+    order_id   INT REFERENCES trade_orders(order_id),
+    account_id INT REFERENCES trading_accounts(account_id),
+    symbol     VARCHAR(10),
+    side       VARCHAR(4),          -- 'buy' | 'sell'
+    qty        INT,                 -- always positive; sign comes from side
+    price      NUMERIC(12,2),
+    filled_at  TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS market_data (
+    symbol     VARCHAR(10),
+    trade_date DATE,
+    open       NUMERIC(12,2),
+    high       NUMERIC(12,2),
+    low        NUMERIC(12,2),
+    close      NUMERIC(12,2),
+    volume     BIGINT,
+    PRIMARY KEY (symbol, trade_date)
 );
 
 -- ============================================================
@@ -540,6 +589,80 @@ INSERT INTO daily_metrics (dt, metric) VALUES
 ('2026-01-04', 110), ('2026-01-05', 130), ('2026-01-06', 115),
 ('2026-01-07', 140), ('2026-01-08', 125), ('2026-01-09', 135),
 ('2026-01-10', 150)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- Brokerage / trading data (ch12)
+-- ============================================================
+
+INSERT INTO trading_accounts (account_id, name, opened_at) VALUES
+(1, 'Ava',  '2026-08-01'),
+(2, 'Ben',  '2026-08-01'),
+(3, 'Cara', '2026-08-10')
+ON CONFLICT DO NOTHING;
+
+-- 5 trading days of daily bars: 2026-08-24 .. 2026-08-28
+INSERT INTO market_data (symbol, trade_date, open, high, low, close, volume) VALUES
+('AAPL','2026-08-24', 209.00, 212.00, 207.50, 210.00,  74000000),
+('AAPL','2026-08-25', 210.50, 216.00, 210.00, 215.00,  68000000),
+('AAPL','2026-08-26', 215.00, 222.00, 214.00, 221.00,  81000000),
+('AAPL','2026-08-27', 221.00, 227.00, 220.00, 225.00,  90000000),
+('AAPL','2026-08-28', 225.50, 231.00, 224.00, 230.00,  77000000),
+('TSLA','2026-08-24', 249.00, 253.00, 246.00, 248.00, 102000000),
+('TSLA','2026-08-25', 248.50, 256.00, 247.00, 252.00,  98000000),
+('TSLA','2026-08-26', 252.00, 254.00, 240.00, 241.00, 120000000),
+('TSLA','2026-08-27', 241.00, 250.00, 239.00, 248.00, 110000000),
+('TSLA','2026-08-28', 248.00, 258.00, 247.00, 255.00,  95000000),
+('MSFT','2026-08-24', 397.00, 401.00, 395.00, 398.00,  22000000),
+('MSFT','2026-08-25', 398.50, 406.00, 398.00, 404.00,  20000000),
+('MSFT','2026-08-26', 404.00, 407.00, 400.00, 402.00,  19000000),
+('MSFT','2026-08-27', 402.50, 411.00, 402.00, 409.00,  21000000),
+('MSFT','2026-08-28', 409.00, 416.00, 408.00, 415.00,  23000000),
+('NVDA','2026-08-24', 117.00, 120.00, 116.00, 118.00, 210000000),
+('NVDA','2026-08-25', 118.50, 126.00, 118.00, 124.00, 230000000),
+('NVDA','2026-08-26', 124.00, 125.00, 120.00, 121.00, 205000000),
+('NVDA','2026-08-27', 121.50, 131.00, 121.00, 129.00, 240000000),
+('NVDA','2026-08-28', 129.00, 132.00, 127.00, 128.00, 215000000)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO trade_orders (order_id, account_id, symbol, side, ordered_qty, limit_price, status, submitted_at) VALUES
+( 1, 1, 'AAPL', 'buy',  100, 210.00, 'filled',   '2026-08-24 09:30:05'),
+( 2, 1, 'AAPL', 'buy',   50, 215.00, 'filled',   '2026-08-25 09:58:00'),
+( 3, 1, 'AAPL', 'sell', 100, 225.00, 'partial',  '2026-08-27 13:55:00'),  -- only 60 filled
+( 4, 1, 'NVDA', 'buy',   20, 118.00, 'filled',   '2026-08-24 09:34:00'),
+( 5, 1, 'NVDA', 'buy',   30, 122.00, 'filled',   '2026-08-26 10:58:00'),
+( 6, 2, 'TSLA', 'buy',   40, 248.00, 'filled',   '2026-08-24 09:38:00'),
+( 7, 2, 'TSLA', 'sell',  40, 252.00, 'filled',   '2026-08-25 15:28:00'),
+( 8, 2, 'MSFT', 'buy',   10, 398.00, 'filled',   '2026-08-24 09:30:00'),
+( 9, 2, 'MSFT', 'buy',   10, 402.00, 'filled',   '2026-08-25 09:30:00'),
+(10, 2, 'MSFT', 'sell',   5, 408.00, 'filled',   '2026-08-28 09:30:00'),
+(11, 3, 'NVDA', 'buy',  200, 119.00, 'filled',   '2026-08-24 09:30:00'),
+(12, 3, 'NVDA', 'sell',  50, 124.00, 'filled',   '2026-08-25 10:12:00'),
+(13, 3, 'NVDA', 'sell',  50, 129.00, 'filled',   '2026-08-27 12:58:00'),
+(14, 3, 'AAPL', 'buy',    5, 221.00, 'filled',   '2026-08-26 09:30:00'),
+(15, 1, 'TSLA', 'buy',   10, 250.00, 'filled',   '2026-08-28 10:59:58'),
+(16, 1, 'TSLA', 'sell',  10, 250.10, 'filled',   '2026-08-28 10:59:59'),
+(17, 3, 'MSFT', 'buy',  100, 390.00, 'canceled', '2026-08-26 10:00:00'),  -- 0 filled
+(18, 2, 'NVDA', 'buy',   60, 120.00, 'new',      '2026-08-28 12:00:00')   -- 0 filled, still working
+ON CONFLICT DO NOTHING;
+
+INSERT INTO fills (order_id, account_id, symbol, side, qty, price, filled_at) VALUES
+( 1, 1, 'AAPL', 'buy',  100, 210.00, '2026-08-24 09:31:02'),
+( 2, 1, 'AAPL', 'buy',   50, 214.80, '2026-08-25 10:00:11'),
+( 3, 1, 'AAPL', 'sell',  60, 225.30, '2026-08-27 14:00:40'),   -- partial: 60 of 100
+( 4, 1, 'NVDA', 'buy',   20, 117.90, '2026-08-24 09:35:00'),
+( 5, 1, 'NVDA', 'buy',   30, 121.40, '2026-08-26 11:00:00'),
+( 6, 2, 'TSLA', 'buy',   40, 247.80, '2026-08-24 09:40:00'),
+( 7, 2, 'TSLA', 'sell',  40, 252.20, '2026-08-25 15:30:00'),   -- position fully closed
+( 8, 2, 'MSFT', 'buy',   10, 398.00, '2026-08-24 09:30:30'),
+( 9, 2, 'MSFT', 'buy',   10, 402.10, '2026-08-25 09:30:15'),
+(10, 2, 'MSFT', 'sell',   5, 408.50, '2026-08-28 09:30:20'),
+(11, 3, 'NVDA', 'buy',  200, 119.10, '2026-08-24 09:32:00'),
+(12, 3, 'NVDA', 'sell',  50, 124.30, '2026-08-25 10:15:00'),
+(13, 3, 'NVDA', 'sell',  50, 129.20, '2026-08-27 13:00:00'),
+(14, 3, 'AAPL', 'buy',    5, 220.90, '2026-08-26 09:31:00'),
+(15, 1, 'TSLA', 'buy',   10, 250.00, '2026-08-28 11:00:00'),   -- self-cross pair with fill below
+(16, 1, 'TSLA', 'sell',  10, 250.05, '2026-08-28 11:00:03')
 ON CONFLICT DO NOTHING;
 
 -- ============================================================

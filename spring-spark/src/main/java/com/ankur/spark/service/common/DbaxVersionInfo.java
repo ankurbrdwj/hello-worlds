@@ -1,0 +1,22 @@
+package com.ankur.spark.service.common;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.io.Serializable;
+
+@Getter
+@Setter
+@EqualsAndHashCode
+public class DbaxVersionInfo implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String version;
+
+    @Override
+    public String toString() {
+        return version;
+    }
+}
